@@ -40,8 +40,7 @@ def epoching(args, data_part, seed):
 		eeg_dir = os.path.join('dataset', 'THINGS_EEG2', 'raw_data', 
 						 'sub-'+format(args.subj,'02'), 
 						 'ses-'+format(s+1,'02'), 'raw_eeg_'+data_part+'.npy')
-		eeg_data = np.load(os.path.join(args.project_dir, eeg_dir),
-			allow_pickle=True).item()
+		eeg_data = np.load(eeg_dir, allow_pickle=True).item()
 		ch_names = eeg_data['ch_names']
 		sfreq = eeg_data['sfreq']
 		ch_types = eeg_data['ch_types']
@@ -77,7 +76,7 @@ def epoching(args, data_part, seed):
 		times = epochs.times
 
 		### Sort the data ###
-		data = epochs.get_data()
+		data = epochs.get_data(copy=False)
 		events = epochs.events[:,2]
 		img_cond = np.unique(events)
 		del epochs
@@ -230,8 +229,8 @@ def save_prepr(args, whitened_test, whitened_train, img_conditions_train,
 	}
 	del merged_test
 	# Saving directories
-	save_dir = os.path.join(args.project_dir, 'dataset', 'THINGS_EEG2',
-		'preprocessed_data', 'sub-'+format(args.subj,'02'))
+	save_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data', 
+                         'sub-'+format(args.subj,'02'))
 	file_name_test = 'preprocessed_eeg_test.npy'
 	file_name_train = 'preprocessed_eeg_training.npy'
 	# Create the directory if not existing and save the data
@@ -278,3 +277,55 @@ def save_prepr(args, whitened_test, whitened_train, img_conditions_train,
 	np.save(os.path.join(save_dir, file_name_train),
 		train_dict)
 	del train_dict
+ 
+def train_model_THINGS2():
+    """The function trains the encoding model using LinearRegression. X train 
+    is THINGS2 dnn feature maps and Y train is the real THINGS EEG2 training 
+    data.
+    
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+
+    Returns
+    ----------
+    reg: The trained LogisticRegression model.
+    """
+
+    import os
+    import numpy as np
+    from tqdm import tqdm
+    from sklearn.linear_model import LinearRegression
+
+    ### Load the training DNN feature maps ###
+    # Load the training DNN feature maps directory
+    dnn_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'dnn_feature_maps')
+    # Load the training DNN feature maps (16540, 300)
+    dnn_fmaps_train = np.load(os.path.join(dnn_train_dir, 'new_feature_maps.npy'), 
+                            allow_pickle=True)
+
+    ### Load the training EEG data ###
+    # Load the THINGS2 training EEG data directory
+    eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data')
+    # Iterate over THINGS2 subjects
+    eeg_data_train = []
+    for train_subj in tqdm(range(1,7), desc='THINGS EEG2 subjects'):
+        # Load the THINGS2 training EEG data
+        data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
+                    'preprocessed_eeg_training.npy'), allow_pickle=True).item()
+        # Average the training EEG data across repetitions: (16540,64,100)
+        data = np.mean(data['preprocessed_eeg_data'], 1)
+        # Reshape the data: (16540, 64 x 100)
+        data = np.reshape(data, (data.shape[0],-1))
+        # Append individual data
+        eeg_data_train.append(data)
+        del data
+    # Average the training EEG data across subjects: (16540, 64 x 100)
+    eeg_data_train = np.mean(eeg_data_train, 0)
+    print('eeg_data_train shape', eeg_data_train.shape)
+
+    ### Train the encoding model ###
+    # Train the encoding models
+    reg = LinearRegression().fit(dnn_fmaps_train, eeg_data_train)
+    return reg

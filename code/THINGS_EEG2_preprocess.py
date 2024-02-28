@@ -26,13 +26,13 @@ from func import epoching, mvnn, save_prepr
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--project_dir', default='../project_directory', type=str)
 parser.add_argument('--subj', default=1, type=int)
 parser.add_argument('--n_ses', default=4, type=int)
 parser.add_argument('--sfreq', default=100, type=int)
 parser.add_argument('--mvnn_dim', default='time', type=str)
 args = parser.parse_args()
 
+print('')
 print('>>> THINGS EEG2 data preprocessing <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
@@ -46,7 +46,6 @@ seed = 20200220
 # =============================================================================
 epoched_test, _, ch_names, times = epoching(args, 'test', seed)
 epoched_train, img_conditions_train, _, _ = epoching(args, 'training', seed)
-print(ch_names, len(ch_names))
 
 # =============================================================================
 # Multivariate Noise Normalization
