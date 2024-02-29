@@ -1,7 +1,9 @@
 import os
+import pickle
 import argparse
 import numpy as np
 from tqdm import tqdm
+from func import load_full_fmaps
 
 # =============================================================================
 # Input arguments
@@ -22,35 +24,10 @@ for key, val in vars(args).items():
 seed = 20200220
 
 # =============================================================================
-# Load the feature maps
+# Load the training feature maps
 # =============================================================================
 
-### Load the feature maps ###
-feats = []
-feats_all = []
-# The dictionaries storing the dnn training feature maps in 3 stages
-fmaps_train = {}
-fmaps_train_1 = {}
-fmaps_train_2 = {}
-# The directory of the dnn training feature maps
-fmaps_dir = os.path.join('dataset','THINGS_EEG2', 'dnn_feature_maps',
-                        'full_feature_maps', 'Alexnet', 
-                        'pretrained-'+str(args.pretrained),
-                        'training_images')
-fmaps_list = os.listdir(fmaps_dir)
-fmaps_list.sort()
-for f, fmaps in enumerate(tqdm(fmaps_list, desc='training_images')):
-    fmaps_data = np.load(os.path.join(fmaps_dir, fmaps),
-                            allow_pickle=True).item()
-    all_layers = fmaps_data.keys()
-    for l, dnn_layer in enumerate(all_layers):
-        if f == 0:
-            feats.append([[np.reshape(fmaps_data[dnn_layer], -1)]])
-        else:
-            feats[l].append([np.reshape(fmaps_data[dnn_layer], -1)])
-    
-fmaps_train[args.layer_name] = np.squeeze(np.asarray(feats[l]))
-print('The original training fmaps shape', fmaps_train[args.layer_name].shape)
+fmaps_train = load_full_fmaps(args)
 
 # =============================================================================
 # Feature selection
@@ -85,13 +62,22 @@ for train_subj in tqdm(range(1,11), desc='THINGS EEG2 subjects'):
 eeg_data_train = np.mean(eeg_data_train, 0)
 
 # Fit feature selection model and transform
-best_feat = SelectKBest(f_regression, k=args.num_feat).fit_transform(fmaps_train[args.layer_name], 
+feature_selection = SelectKBest(f_regression, k=args.num_feat).fit(fmaps_train[args.layer_name], 
                                                         eeg_data_train)
+best_feat = feature_selection.transform(fmaps_train[args.layer_name])
+
 print(f'The new training fmaps shape {best_feat.shape}')
 del fmaps_train[args.layer_name]
 
 # non_zero_count = np.count_nonzero(best_feat, axis=1)
 # print(non_zero_count[:100])
+
+# =============================================================================
+# Save the feature selection model
+# =============================================================================
+
+save_dir = os.path.join('dataset','THINGS_EEG2')
+pickle.dump(feature_selection, open(os.path.join(save_dir, 'feat_model.pkl'), 'wb'))
 
 # =============================================================================
 # Save new features
