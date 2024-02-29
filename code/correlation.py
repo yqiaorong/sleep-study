@@ -131,7 +131,7 @@ plt.xlabel('Time (s)')
 plt.xlim(left=-.2, right=.8)
 plt.ylabel('Pearson\'s $r$')
 plt.ylim(bottom=-.05, top=.3)
-plt.title(f'Averaged ncoding accuracy on {args.test_dataset} (Alexnet)')
+plt.title(f'Averaged encoding accuracy on {args.test_dataset} (Alexnet)')
 plt.legend(loc='best')
 plt.savefig(os.path.join(save_dir, 
                          f'Averaged encoding accuracy on {args.test_dataset} (Alexnet).jpg'))
