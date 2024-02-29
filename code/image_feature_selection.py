@@ -63,7 +63,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data')
 # Iterate over THINGS2 subjects
 eeg_data_train = []
-for train_subj in tqdm(range(1,7), desc='THINGS EEG2 subjects'):
+for train_subj in tqdm(range(1,11), desc='THINGS EEG2 subjects'):
     # Load the THINGS2 training EEG data
     data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
                   'preprocessed_eeg_training.npy'), allow_pickle=True).item()
@@ -87,6 +87,7 @@ eeg_data_train = np.mean(eeg_data_train, 0)
 # Fit feature selection model and transform
 best_feat = SelectKBest(f_regression, k=args.num_feat).fit_transform(fmaps_train[args.layer_name], 
                                                         eeg_data_train)
+print(f'The new training fmaps shape {best_feat.shape}')
 del fmaps_train[args.layer_name]
 
 # non_zero_count = np.count_nonzero(best_feat, axis=1)
