@@ -45,17 +45,28 @@ reg = pickle.load(open(os.path.join(model_path, 'reg_model.pkl'), 'rb'))
 # Load the test EEG data and predict EEG from fmaps
 # =============================================================================
 
-# Load the THINGS2 training EEG data directory
+# Load the test EEG data directory
 eeg_train_dir = os.path.join('dataset', args.test_dataset, 'preprocessed_data')
-# Iterate over THINGS2 subjects
+# Iterate over subjects
 eeg_data_test = []
-for test_subj in tqdm(range(1,11), desc=f'{args.test_dataset} subjects'):
+
+if args.test_dataset == 'THINGS_EEG1':
+    subj_range = [1,3]
+elif args.test_dataset == 'THINGS_EEG2':
+    subj_range = [1,11]
+num_subj = subj_range[1]-subj_range[0]
+
+for test_subj in tqdm(range(subj_range[0], subj_range[1]), 
+                            desc=f'load {args.test_dataset} test data'):
     # Load the THINGS2 training EEG data
     data = np.load(os.path.join(eeg_train_dir,'sub-'+format(test_subj,'02'),
                   'preprocessed_eeg_test.npy'), allow_pickle=True).item()
     # Average the training EEG data across repetitions: (200,64,100)
     data = np.mean(data['preprocessed_eeg_data'], 1)
-    # Average the training EEG data over time: (200,64)
+    # Drop the sim channel of THINGS EEG2: (200,63,100)
+    if args.test_dataset == 'THINGS_EEG2':
+        data = np.delete(data, -1, axis=1)
+    # Average the training EEG data over time: (200,63)
     data = np.mean(data, -1)
     # Average the training EEG data across electrodes: (200,)
     data = np.mean(data, -1)
@@ -73,13 +84,10 @@ print('pred_eeg_data_test shape', pred_eeg.shape)
 # Get the encoding accuracy
 # =============================================================================
 
-# Test subjects list
-test_subjs = range(1, 11)
-
 # Get the encoding accuracy for each subject
-tot_accuracy = np.empty((len(test_subjs),100))
-for i, test_subj in enumerate(tqdm(test_subjs, 
-                            desc=f'{args.test_dataset} subjects correlation')):
+tot_accuracy = np.empty((num_subj,100))
+for i, test_subj in enumerate(tqdm(range(subj_range[0], subj_range[1]), 
+                            desc=f'{args.test_dataset} correlation')):
     accuracy, times = corr(args, pred_eeg, test_subj)
     tot_accuracy[i] = accuracy
 
@@ -97,9 +105,9 @@ plt.figure(1)
 plt.plot([-.2, .8], [0, 0], 'k--', [0, 0], [-1, 1], 'k--')
 # Set the plot colour spectum
 cmap = "cividis"
-colours = plt.colormaps[cmap](np.linspace(0,1,len(test_subjs)))
+colours = plt.colormaps[cmap](np.linspace(0,1,num_subj))
 # Plot
-for i in range(len(test_subjs)):
+for i in range(num_subj):
     plt.plot(times, tot_accuracy[i], color = colours[i], alpha=0.2)
 plt.plot(times, np.mean(tot_accuracy,0), color='k', label='Correlation scores')
 plt.xlabel('Time (s)')
@@ -109,7 +117,7 @@ plt.ylim(bottom=-.1, top=.3)
 plt.title(f'Encoding accuracy on {args.test_dataset} (Alexnet)')
 plt.legend(loc='best')
 plt.savefig(os.path.join(save_dir, 
-                         f'Encoding accuracy on {args.test_dataset} (Alexnet).jpg'))
+            f'Encoding accuracy on {args.test_dataset} (Alexnet).jpg'))
 
 ### Average with confidence interval ###
 # Set random seed for reproducible results
@@ -134,4 +142,4 @@ plt.ylim(bottom=-.05, top=.3)
 plt.title(f'Averaged encoding accuracy on {args.test_dataset} (Alexnet)')
 plt.legend(loc='best')
 plt.savefig(os.path.join(save_dir, 
-                         f'Averaged encoding accuracy on {args.test_dataset} (Alexnet).jpg'))
+            f'Averaged encoding accuracy on {args.test_dataset} (Alexnet).jpg'))

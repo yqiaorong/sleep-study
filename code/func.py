@@ -1,4 +1,4 @@
-def epoching(args, data_part, seed):
+def epoching_THINGS2(args, data_part, seed):
 	"""This function first converts the EEG data to MNE raw format, and
 	performs re-reference, bandpass filter, epoching, baseline correction 
 	and frequency downsampling. Then, it sorts the EEG data of each session
@@ -103,7 +103,7 @@ def epoching(args, data_part, seed):
 	### Output ###
 	return epoched_data, img_conditions, ch_names, times
 
-def mvnn(args, epoched_test, epoched_train):
+def mvnn_THINGS2(args, epoched_test, epoched_train):
 	"""Compute the covariance matrices of the EEG data (calculated for each
 	time-point or epoch/repetitions of each image condition), and then average
 	them across image conditions and data partitions. The inverse of the
@@ -181,7 +181,7 @@ def mvnn(args, epoched_test, epoched_train):
 	### Output ###
 	return whitened_test, whitened_train
 
-def save_prepr(args, whitened_test, whitened_train, img_conditions_train,
+def save_prepr_THINGS2(args, whitened_test, whitened_train, img_conditions_train,
 	ch_names, times, seed):
 	"""Merge the EEG data of all sessions together, shuffle the EEG repetitions
 	across sessions and reshaping the data to the format:
@@ -277,7 +277,238 @@ def save_prepr(args, whitened_test, whitened_train, img_conditions_train,
 	np.save(os.path.join(save_dir, file_name_train),
 		train_dict)
 	del train_dict
- 
+
+def epoching_THINGS1(args):
+    """The function preprocesses the raw EEG file: channel selection, 
+    creating annotations and events, re-reference, bandpass filter,
+    epoching, baseline correction and frequency downsampling. Then, it 
+    sorts the test EEG data according to the image conditions.
+
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+
+    Returns
+    -------
+    sort_data : array of shape (image,repetition,channel,time)
+        Epoched EEG test data.
+    ch_names : list of str
+        EEG channel names.
+    times : list of float
+        EEG time points.
+    """
+
+    import os
+    import mne
+    import numpy as np
+    import pandas as pd
+    
+    ### Load the THINGS1 subject metadata ### 
+    # Load the THINGS1 subject directory
+    TH1_dir = os.path.join('dataset','THINGS_EEG1','raw_data',
+                           'sub-'+format(args.subj,'02'),'eeg')
+    # Load the THINGS1 subject metadata
+    dftsv = pd.read_csv(os.path.join(TH1_dir, 'sub-'+format(args.subj,'02')+
+                                     '_task-rsvp_events.tsv'), delimiter='\t')
+    
+    ### Crop the THINGS1 subject metadata ###
+    # Select the main 22248 images
+    dftsv = dftsv.iloc[:22248]
+    # Select events relevant information
+    dftsv = dftsv[['onset','object']] 
+    
+    ### Load the THINGS1 subject EEG data ###
+    # Load the THINGS1 subject EEG directory
+    TH1_EEG_dir = os.path.join(TH1_dir, 'sub-'+format(args.subj,'02')+
+                               '_task-rsvp_eeg.vhdr')
+    # Load the THINGS1 subject EEG raw file
+    raw = mne.io.read_raw_brainvision(TH1_EEG_dir, preload=True)
+    
+    ### channel selection ###
+    # Pick the main 63 channels
+    channels = ['Fp1', 'F3', 'F7', 'FT9', 'FC5', 'FC1', 'C3', 'T7', 'TP9', 'CP5', 
+    'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', 'P4', 'P8', 'TP10', 'CP6', 
+    'CP2', 'Fz', 'C4', 'T8', 'FT10', 'FC6', 'FC2', 'F4', 'F8', 'Fp2', 
+    'AF7', 'AF3', 'AFz', 'F1', 'F5', 'FT7', 'FC3', 'FCz', 'C1', 'C5', 
+    'TP7', 'CP3', 'P1', 'P5', 'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'P6', 
+    'P2', 'CPz', 'CP4', 'TP8', 'C6', 'C2', 'FC4', 'FT8', 'F6', 'F2', 
+    'AF4', 'AF8']
+    raw = raw.pick(channels)
+    
+    ### Create annotations and events ###
+    # Annotation onset
+    onset = dftsv['onset'] # in seconds
+    # Annotation duration
+    duration = [0.05]*len(dftsv) # in seconds, too
+    # Create annotations
+    annot = mne.Annotations(onset=onset, duration=duration, 
+                            description=['images']*len(dftsv))
+    # Set annotations
+    raw.set_annotations(annot)
+    # Create events
+    events, _ = mne.events_from_annotations(raw)
+    
+    ### Re-reference and bandpass filter all channels ###
+    # Re-reference raw 'average'
+    raw.set_eeg_reference()  
+    # Bandpass filter
+    raw.filter(l_freq=0.1, h_freq=100)
+    
+    ### Epoching, baseline correction and resampling ###
+    # Epoching
+    epochs = mne.Epochs(raw, events, tmin=-.2, tmax=.8, baseline=(None,0), 
+                        preload=True)
+    del raw
+    # Resampling
+    epochs.resample(args.sfreq)
+    
+    ### Get epoched channels and times ###
+    ch_names = epochs.info['ch_names']
+    times = epochs.times
+    
+    ### Sort epoched data according to the THINGS2 test images ###
+    # Get epoched data
+    epoched_data = epochs.get_data()
+    del epochs
+    # THINGS2 test images directory
+    test_img_dir = os.path.join('dataset','THINGS_EEG2','image_set',
+                                'test_images')
+    # Create list of THINGS2 test images
+    test_imgs = os.listdir(test_img_dir)
+    # The sorted epoched data
+    sort_data = []
+    # Iterate over THINGS2 test images
+    for test_img in test_imgs:
+        # Get the indices of test image 
+        indices = dftsv.index[dftsv['object'] == test_img[6:]]
+        # Get the data of test image 
+        data = [epoched_data[i, :, :] for i in indices]
+        # Convert list to array
+        data = np.array(data)
+        # Add the data to the test THINGS1 EEG data
+        sort_data.append(data)
+        del indices, data
+    # Convert list to array
+    sort_data = np.array(sort_data)
+
+    ### Outputs ###
+    return sort_data, ch_names, times
+
+def mvnn_THINGS1(args, epoched_data):
+    """Compute the covariance matrices of the EEG data (calculated for each
+    time-point or epoch of each image condition), and then average them 
+    across image conditions. The inverse of the resulting averaged covariance
+    matrix is used to whiten the EEG data.
+
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+    epoched_data : array of shape (image,repetition,channel,time)
+        Epoched EEG data.
+
+    Returns
+    -------
+    whitened_data : array of shape (image,repetition,channel,time)
+        Whitened EEG data.
+    """
+
+    import numpy as np
+    from tqdm import tqdm
+    from sklearn.discriminant_analysis import _cov
+    import scipy
+
+    whitened_data = []
+    # Notations
+    img_cond = epoched_data.shape[0]
+    num_rep = epoched_data.shape[1]
+    num_ch = epoched_data.shape[2]
+    num_time = epoched_data.shape[3]
+
+    ### Compute the covariance matrices ###
+    # Covariance matrix of shape:
+    # EEG channels × EEG channels
+    sigma = np.empty((num_ch, num_ch))
+    # Image conditions covariance matrix of shape:
+    # Image conditions × EEG channels × EEG channels
+    sigma_cond = np.empty((img_cond, num_ch, num_ch))
+    # Iterate across the time points
+    for i in tqdm(range(img_cond)):
+        cond_data = epoched_data[i]
+        # Compute covariace matrices at each time point, and then
+        # average across time points
+        if args.mvnn_dim == "time":
+            sigma_cond[i] = np.mean([_cov(cond_data[:,:,t],
+                shrinkage='auto') for t in range(num_time)],
+                axis=0)
+        # Compute covariace matrices at each epoch, and then 
+        # average across epochs
+        elif args.mvnn_dim == "epochs":
+            sigma_cond[i] = np.mean([_cov(np.transpose(cond_data[e]),
+                shrinkage='auto') for e in range(num_rep)],
+                axis=0)
+    # Average the covariance matrices across image conditions
+    sigma = sigma_cond.mean(axis=0)
+    # Compute the inverse of the covariance matrix
+    sigma_inv = scipy.linalg.fractional_matrix_power(sigma, -0.5)
+
+    ### Whiten the data ###
+    whitened_data = np.reshape((np.reshape(epoched_data, 
+    (-1,num_ch,num_time)).swapaxes(1, 2) @ sigma_inv).swapaxes(1, 2), 
+    epoched_data.shape)
+
+    ### Output ###  
+    return whitened_data
+
+def save_prepr_THINGS1(args, whitened_data, ch_names, times, seed):
+    """Shuffle the EEG repetitions across sessions and reshaping the 
+    data to the format:
+    Image conditions × EGG repetitions × EEG channels × EEG time points.
+    Then, the data of both test EEG partitions is saved.
+
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+    whitened_data : array of shape (image,repetition,channel,time)
+        Whitened EEG data.
+    ch_names : list of str
+        EEG channel names.
+    times : list of float
+        EEG time points.
+    seed : int
+        Random seed.
+
+    """
+    
+    import os
+    import numpy as np
+    from sklearn.utils import shuffle
+    
+    ### Save the data ###
+    # Notation
+    num_rep = whitened_data.shape[1]
+    # Shuffle the repetitions of different sessions
+    idx = shuffle(np.arange(0, num_rep), random_state=seed)
+    whitened_data = whitened_data[:,idx]
+    # Insert the data into a dictionary
+    data_dict = {
+        'preprocessed_eeg_data': whitened_data,
+        'ch_names': ch_names,
+        'times': times
+    }
+    del whitened_data
+    # Saving directories
+    save_dir = os.path.join('dataset','THINGS_EEG1','preprocessed_data',
+                            'sub-'+format(args.subj,'02'))
+    file_name_test = 'preprocessed_eeg_test.npy'
+    # Create the directory if not existing and save the data
+    if os.path.isdir(save_dir) == False:
+        os.makedirs(save_dir)
+    np.save(os.path.join(save_dir, file_name_test), data_dict)
+    del data_dict
+
 def train_model_THINGS2():
     """The function trains the encoding model using LinearRegression. X train 
     is THINGS2 dnn feature maps and Y train is the real THINGS EEG2 training 
@@ -310,18 +541,20 @@ def train_model_THINGS2():
     eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data')
     # Iterate over THINGS2 subjects
     eeg_data_train = []
-    for train_subj in tqdm(range(1,7), desc='THINGS EEG2 subjects'):
+    for train_subj in tqdm(range(1,11), desc='THINGS EEG2 subjects'):
         # Load the THINGS2 training EEG data
         data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
                     'preprocessed_eeg_training.npy'), allow_pickle=True).item()
         # Average the training EEG data across repetitions: (16540,64,100)
         data = np.mean(data['preprocessed_eeg_data'], 1)
-        # Reshape the data: (16540, 64 x 100)
+        # Drop the stim channel: (16540, 63, 100)
+        data = np.delete(data, -1, axis=1)
+        # Reshape the data: (16540, 63 x 100)
         data = np.reshape(data, (data.shape[0],-1))
         # Append individual data
         eeg_data_train.append(data)
         del data
-    # Average the training EEG data across subjects: (16540, 64 x 100)
+    # Average the training EEG data across subjects: (16540, 63 x 100)
     eeg_data_train = np.mean(eeg_data_train, 0)
     print('eeg_data_train shape', eeg_data_train.shape)
 
@@ -373,21 +606,24 @@ def corr(args, pred_eeg_data_test, test_subj):
     # Get the number of test images
     num_img = eeg_data_test['preprocessed_eeg_data'].shape[0]
     # Get test channel names and times
-    test_ch_names = eeg_data_test['ch_names']
+    num_ch = 63
     test_times = eeg_data_test['times']
     # Average the test EEG data across repetitions if it's THINGS
     eeg_data_test_avg = np.mean(eeg_data_test['preprocessed_eeg_data'], 1)
-
+    # Drop the stim channel of THINGS EEG2:(200,63,100)
+    if args.test_dataset == 'THINGS_EEG2':
+        eeg_data_test_avg = np.delete(eeg_data_test_avg,-1,axis=1)
+        
     ### Separate the dimension of EEG channels and times ###
-    pred_eeg_data_test = np.reshape(pred_eeg_data_test,(num_img,len(test_ch_names),len(test_times)))
-    eeg_data_test_avg = np.reshape(eeg_data_test_avg,(num_img,len(test_ch_names),len(test_times)))
+    pred_eeg_data_test = np.reshape(pred_eeg_data_test,(num_img,num_ch,len(test_times)))
+    eeg_data_test_avg = np.reshape(eeg_data_test_avg,(num_img,num_ch,len(test_times)))
     del eeg_data_test
     
     ### Test the encoding model ###
     # Calculate the encoding accuracy
-    encoding_accuracy = np.zeros((len(test_ch_names),len(test_times)))
+    encoding_accuracy = np.zeros((num_ch,len(test_times)))
     for t in range(len(test_times)):
-        for c in range(len(test_ch_names)):
+        for c in range(num_ch):
             encoding_accuracy[c,t] = corr(pred_eeg_data_test[:,c,t],
                 eeg_data_test_avg[:,c,t])[0]
     # Average the encoding accuracy across channels

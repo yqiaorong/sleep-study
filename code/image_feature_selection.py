@@ -51,7 +51,9 @@ for train_subj in tqdm(range(1,11), desc='THINGS EEG2 subjects'):
         pass
     # Average the training EEG data across repetitions: (16540,64,100)
     data = np.mean(data['preprocessed_eeg_data'], 1)
-    # Average the training EEG data over time: (16540,64)
+    # Drop the stimulus channel: (16540,63,100)
+    data = np.delete(data, -1, axis=1)
+    # Average the training EEG data over time: (16540,63)
     data = np.mean(data, -1)
     # Average the training EEG data across electrodes: (16540,)
     data = np.mean(data, -1)
@@ -68,9 +70,6 @@ best_feat = feature_selection.transform(fmaps_train[args.layer_name])
 
 print(f'The new training fmaps shape {best_feat.shape}')
 del fmaps_train[args.layer_name]
-
-# non_zero_count = np.count_nonzero(best_feat, axis=1)
-# print(non_zero_count[:100])
 
 # =============================================================================
 # Save the feature selection model

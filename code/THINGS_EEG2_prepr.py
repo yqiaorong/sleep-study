@@ -6,8 +6,6 @@ Then, the data of both test and training EEG partitions is saved.
 
 Parameters
 ----------
-project_dir : str
-	Directory of the project folder.
 subj : int
 	Used subject.
 n_ses : int
@@ -20,7 +18,7 @@ mvnn_dim : str
 """
 
 import argparse
-from func import epoching, mvnn, save_prepr
+from func import epoching_THINGS2, mvnn_THINGS2, save_prepr_THINGS2
 
 # =============================================================================
 # Input arguments
@@ -44,17 +42,17 @@ seed = 20200220
 # =============================================================================
 # Epoch and sort the data
 # =============================================================================
-epoched_test, _, ch_names, times = epoching(args, 'test', seed)
-epoched_train, img_conditions_train, _, _ = epoching(args, 'training', seed)
+epoched_test, _, ch_names, times = epoching_THINGS2(args, 'test', seed)
+epoched_train, img_conditions_train, _, _ = epoching_THINGS2(args, 'training', seed)
 
 # =============================================================================
 # Multivariate Noise Normalization
 # =============================================================================
-whitened_test, whitened_train = mvnn(args, epoched_test, epoched_train)
+whitened_test, whitened_train = mvnn_THINGS2(args, epoched_test, epoched_train)
 del epoched_test, epoched_train
 
 # =============================================================================
 # Merge and save the preprocessed data
 # =============================================================================
-save_prepr(args, whitened_test, whitened_train, img_conditions_train, ch_names,
-	times, seed)
+save_prepr_THINGS2(args, whitened_test, whitened_train, img_conditions_train, 
+                   ch_names, times, seed)

@@ -17,7 +17,7 @@ The download path: ../code/
 
 The order of running the scripts: 
 
-* run_all_scripts.py (This file preprocesses all THINGS EEG2 raw data.)
+* run_all_scripts.py (This file preprocesses all THINGS EEG2 and EEG1 raw data.)
 
 * THINGS_alexnet.py (This file extracts THINGS images features by Alexnet. )
 
