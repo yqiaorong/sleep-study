@@ -26,8 +26,8 @@ The order of running the scripts:
 
 * THINGS_alexnet.py (This file extracts THINGS images features by Alexnet. )
 
-* image_feature_selection.py (This file selects the best 300 features of THINGS images features based on THINGS EEG2 training data.)
+* image_feature_selection.py --num_feat (This file selects the best 300 features of THINGS images features based on THINGS EEG2 training data.)
 
-* encoding_model.py (This file trains the linear regression model on THINGS EEG2 training data. )
+* encoding_model.py --num_feat (This file trains the linear regression model on THINGS EEG2 training data. )
 
-* correlation.py --test_dataset (THINGS_EEG2/THINGS_EEG1) (This file tests the encoding model on either THINGS EEG2 test data or THINGS EEG1 data.)
+* correlation.py --test_dataset --num_feat  (THINGS_EEG2/THINGS_EEG1) (This file tests the encoding model on either THINGS EEG2 test data or THINGS EEG1 data.)
