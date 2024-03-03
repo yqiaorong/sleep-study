@@ -40,7 +40,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data')
 # Iterate over THINGS2 subjects
 eeg_data_train = []
-for train_subj in tqdm(range(1,11), desc='THINGS EEG2 subjects'):
+for train_subj in tqdm(range(1,11), desc='load THINGS EEG2 subjects'):
     # Load the THINGS2 training EEG data
     data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
                   'preprocessed_eeg_training.npy'), allow_pickle=True).item()
@@ -76,16 +76,13 @@ del fmaps_train[args.layer_name]
 # =============================================================================
 
 save_dir = os.path.join('dataset','THINGS_EEG2')
-pickle.dump(feature_selection, open(os.path.join(save_dir, 'feat_model.pkl'), 'wb'))
+pickle.dump(feature_selection, open(os.path.join(save_dir, 
+                                    f'feat_model_{args.num_feat}.pkl'), 'wb'))
 
 # =============================================================================
 # Save new features
 # =============================================================================
 
-# Create the saving directory if not existing
-save_dir = os.path.join('dataset','THINGS_EEG2','dnn_feature_maps')
-if os.path.isdir(save_dir) == False:
-    os.makedirs(save_dir)
-
 # Save new features
-np.save(os.path.join(save_dir, 'new_feature_maps'), best_feat) 
+np.save(os.path.join(save_dir, 'dnn_feature_maps', 
+                     f'new_feature_maps_{args.num_feat}'), best_feat) 

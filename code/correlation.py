@@ -14,8 +14,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--test_dataset',default='THINGS_EEG2',type=str)
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
+parser.add_argument('--num_feat', default=300, type=int)
 args = parser.parse_args()
 
+print('')
 print(f'>>> Test the encoding model on {args.test_dataset} <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
@@ -32,14 +34,17 @@ fmaps_test = load_full_fmaps(args, 'test')
 # =============================================================================
 
 model_path = 'dataset/THINGS_EEG2'
-feat = pickle.load(open(os.path.join(model_path, 'feat_model.pkl'), 'rb'))
+feat = pickle.load(open(os.path.join(model_path, 
+                                     f'feat_model_{args.num_feat}.pkl'), 'rb'))
 best_feat_test = feat.transform(fmaps_test[args.layer_name])
+print(f'The new test fmaps shape {best_feat_test.shape}')
 
 # =============================================================================
 # Load the encoding model
 # =============================================================================
 
-reg = pickle.load(open(os.path.join(model_path, 'reg_model.pkl'), 'rb'))
+reg = pickle.load(open(os.path.join(model_path, 
+                                    f'reg_model_{args.num_feat}.pkl'), 'rb'))
 
 # =============================================================================
 # Load the test EEG data and predict EEG from fmaps
@@ -114,10 +119,10 @@ plt.xlabel('Time (s)')
 plt.xlim(left=-.2, right=.8)
 plt.ylabel('Pearson\'s $r$')
 plt.ylim(bottom=-.1, top=.3)
-plt.title(f'Encoding accuracy on {args.test_dataset} (Alexnet)')
+plt.title(f'Encoding accuracy on {args.test_dataset} (Alexnet): num_feat {args.num_feat}')
 plt.legend(loc='best')
 plt.savefig(os.path.join(save_dir, 
-            f'Encoding accuracy on {args.test_dataset} (Alexnet).jpg'))
+            f'Encoding accuracy on {args.test_dataset} (Alexnet) num_feat {args.num_feat}.jpg'))
 
 ### Average with confidence interval ###
 # Set random seed for reproducible results
@@ -139,7 +144,7 @@ plt.xlabel('Time (s)')
 plt.xlim(left=-.2, right=.8)
 plt.ylabel('Pearson\'s $r$')
 plt.ylim(bottom=-.05, top=.3)
-plt.title(f'Averaged encoding accuracy on {args.test_dataset} (Alexnet)')
+plt.title(f'Averaged encoding accuracy on {args.test_dataset} (Alexnet): num_feat {args.num_feat}')
 plt.legend(loc='best')
 plt.savefig(os.path.join(save_dir, 
-            f'Averaged encoding accuracy on {args.test_dataset} (Alexnet).jpg'))
+            f'Averaged encoding accuracy on {args.test_dataset} (Alexnet) num_feat {args.num_feat}.jpg'))

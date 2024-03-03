@@ -509,7 +509,7 @@ def save_prepr_THINGS1(args, whitened_data, ch_names, times, seed):
     np.save(os.path.join(save_dir, file_name_test), data_dict)
     del data_dict
 
-def train_model_THINGS2():
+def train_model_THINGS2(args):
     """The function trains the encoding model using LinearRegression. X train 
     is THINGS2 dnn feature maps and Y train is the real THINGS EEG2 training 
     data.
@@ -533,7 +533,7 @@ def train_model_THINGS2():
     # Load the training DNN feature maps directory
     dnn_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'dnn_feature_maps')
     # Load the training DNN feature maps (16540, 300)
-    dnn_fmaps_train = np.load(os.path.join(dnn_train_dir, 'new_feature_maps.npy'), 
+    dnn_fmaps_train = np.load(os.path.join(dnn_train_dir, f'new_feature_maps_{args.num_feat}.npy'), 
                             allow_pickle=True)
 
     ### Load the training EEG data ###
@@ -541,7 +541,7 @@ def train_model_THINGS2():
     eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data')
     # Iterate over THINGS2 subjects
     eeg_data_train = []
-    for train_subj in tqdm(range(1,11), desc='THINGS EEG2 subjects'):
+    for train_subj in tqdm(range(1,11), desc='load THINGS EEG2 subjects'):
         # Load the THINGS2 training EEG data
         data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
                     'preprocessed_eeg_training.npy'), allow_pickle=True).item()
@@ -577,7 +577,7 @@ def load_full_fmaps(args, p='training'):
 							f'{p}_images')
 	fmaps_list = os.listdir(fmaps_dir)
 	fmaps_list.sort()
-	for f, fmaps in enumerate(tqdm(fmaps_list, desc='training_images')):
+	for f, fmaps in enumerate(tqdm(fmaps_list, desc='load THINGS training images')):
 		fmaps_data = np.load(os.path.join(fmaps_dir, fmaps),
 								allow_pickle=True).item()
 		all_layers = fmaps_data.keys()
