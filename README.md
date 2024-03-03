@@ -10,7 +10,7 @@
 
 * [Image set](https://osf.io/y63gw/): ../dataset/THINGS_EEG2/image_set/
 
-2. [THINGS EEG1](https://www.nature.com/articles/s41597-021-01102-7) 
+2. [THINGS EEG1 dataset](https://www.nature.com/articles/s41597-021-01102-7) 
 
     The download path:
 
