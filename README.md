@@ -22,7 +22,7 @@ The download path: ../code/
 
 The order of running the scripts: 
 
-* run_all_scripts.py (This file preprocesses all THINGS EEG2 and EEG1 raw data.)
+* run_all_scripts.py --sfreq --adapt_to (This file preprocesses all THINGS EEG2 and EEG1 raw data. If it's adapted to sleemory, sfreq = 250, adapt_to = _sleemory )
 
 * THINGS_alexnet.py (This file extracts THINGS images features by Alexnet. )
 

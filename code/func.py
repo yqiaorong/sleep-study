@@ -1,107 +1,110 @@
 def epoching_THINGS2(args, data_part, seed):
-	"""This function first converts the EEG data to MNE raw format, and
-	performs re-reference, bandpass filter, epoching, baseline correction 
-	and frequency downsampling. Then, it sorts the EEG data of each session
-	 according to the image conditions.
+    """This function first converts the EEG data to MNE raw format, and
+    performs re-reference, bandpass filter, epoching, baseline correction 
+    and frequency downsampling. Then, it sorts the EEG data of each session
+        according to the image conditions.
 
-	Parameters
-	----------
-	args : Namespace
-		Input arguments.
-	data_part : str
-		'test' or 'training' data partitions.
-	seed : int
-		Random seed.
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+    data_part : str
+        'test' or 'training' data partitions.
+    seed : int
+        Random seed.
 
-	Returns
-	-------
-	epoched_data : list of float
-		Epoched EEG data.
-	img_conditions : list of int
-		Unique image conditions of the epoched and sorted EEG data.
-	ch_names : list of str
-		EEG channel names.
-	times : float
-		EEG time points.
+    Returns
+    -------
+    epoched_data : list of float
+        Epoched EEG data.
+    img_conditions : list of int
+        Unique image conditions of the epoched and sorted EEG data.
+    ch_names : list of str
+        EEG channel names.
+    times : float
+        EEG time points.
 
-	"""
+    """
 
-	import os
-	import mne
-	import numpy as np
-	from sklearn.utils import shuffle
+    import os
+    import mne
+    import numpy as np
+    from sklearn.utils import shuffle
 
-	### Loop across data collection sessions ###
-	epoched_data = []
-	img_conditions = []
-	for s in range(args.n_ses):
+    ### Loop across data collection sessions ###
+    epoched_data = []
+    img_conditions = []
+    for s in range(args.n_ses):
 
-		### Load the EEG data and convert it to MNE raw format ###
-		eeg_dir = os.path.join('dataset', 'THINGS_EEG2', 'raw_data', 
-						 'sub-'+format(args.subj,'02'), 
-						 'ses-'+format(s+1,'02'), 'raw_eeg_'+data_part+'.npy')
-		eeg_data = np.load(eeg_dir, allow_pickle=True).item()
-		ch_names = eeg_data['ch_names']
-		sfreq = eeg_data['sfreq']
-		ch_types = eeg_data['ch_types']
-		eeg_data = eeg_data['raw_eeg_data']
-		# Convert to MNE raw format
-		info = mne.create_info(ch_names, sfreq, ch_types)
-		raw = mne.io.RawArray(eeg_data, info)
-		del eeg_data
+        ### Load the EEG data and convert it to MNE raw format ###
+        eeg_dir = os.path.join('dataset', 'THINGS_EEG2', 'raw_data', 
+                            'sub-'+format(args.subj,'02'), 
+                            'ses-'+format(s+1,'02'), 'raw_eeg_'+data_part+'.npy')
+        eeg_data = np.load(eeg_dir, allow_pickle=True).item()
+        ch_names = eeg_data['ch_names']
+        sfreq = eeg_data['sfreq']
+        ch_types = eeg_data['ch_types']
+        eeg_data = eeg_data['raw_eeg_data']
+        # Convert to MNE raw format
+        info = mne.create_info(ch_names, sfreq, ch_types)
+        raw = mne.io.RawArray(eeg_data, info)
+        del eeg_data
 
-		### Get events, drop unused channels and reject target trials ###
-		events = mne.find_events(raw, stim_channel='stim')
-		# Reject the target trials (event 99999)
-		idx_target = np.where(events[:,2] == 99999)[0]
-		events = np.delete(events, idx_target, 0)
+        ### Get events, drop unused channels and reject target trials ###
+        events = mne.find_events(raw, stim_channel='stim')
+        # Reject the target trials (event 99999)
+        idx_target = np.where(events[:,2] == 99999)[0]
+        events = np.delete(events, idx_target, 0)
 
-		### Re-reference and bandpass filter all channels ###
-		# Re-reference raw 'average'
-		raw.set_eeg_reference()  
-		# Bandpass filter
-		raw.filter(l_freq=0.1, h_freq=100)
+        ### Re-reference and bandpass filter all channels ###
+        # Re-reference raw 'average'
+        raw.set_eeg_reference()
+        # Bandpass filter
+        if args.adapt_to == '_sleemory':
+            raw.filter(l_freq=0.01, h_freq=30)
+        else:
+            raw.filter(l_freq=0.1, h_freq=100)
 
-		### Epoching, baseline correction and resampling ###
-		# Epoching
-		epochs = mne.Epochs(raw, events, tmin=-.2, tmax=.8, baseline=(None,0),
-			preload=True)
-		del raw
-		# Resampling
-		if args.sfreq < 1000:
-			epochs.resample(args.sfreq)
+        ### Epoching, baseline correction and resampling ###
+        # Epoching
+        epochs = mne.Epochs(raw, events, tmin=-.2, tmax=.8, baseline=(None,0),
+            preload=True)
+        del raw
+        # Resampling
+        if args.sfreq < 1000:
+            epochs.resample(args.sfreq)
 
-		### Get epoched channels and times ###
-		ch_names = epochs.info['ch_names']
-		times = epochs.times
+        ### Get epoched channels and times ###
+        ch_names = epochs.info['ch_names']
+        times = epochs.times
 
-		### Sort the data ###
-		data = epochs.get_data(copy=False)
-		events = epochs.events[:,2]
-		img_cond = np.unique(events)
-		del epochs
-		# Select only a maximum number of EEG repetitions
-		if data_part == 'test':
-			max_rep = 20
-		else:
-			max_rep = 2
-		# Sorted data matrix of shape:
-		# Image conditions × EEG repetitions × EEG channels × EEG time points
-		sorted_data = np.zeros((len(img_cond),max_rep,data.shape[1],
-			data.shape[2]))
-		for i in range(len(img_cond)):
-			# Find the indices of the selected image condition
-			idx = np.where(events == img_cond[i])[0]
-			# Randomly select only the max number of EEG repetitions
-			idx = shuffle(idx, random_state=seed, n_samples=max_rep)
-			sorted_data[i] = data[idx]
-		del data
-		epoched_data.append(sorted_data)
-		img_conditions.append(img_cond)
-		del sorted_data
+        ### Sort the data ###
+        data = epochs.get_data(copy=False)
+        events = epochs.events[:,2]
+        img_cond = np.unique(events)
+        del epochs
+        # Select only a maximum number of EEG repetitions
+        if data_part == 'test':
+            max_rep = 20
+        else:
+            max_rep = 2
+        # Sorted data matrix of shape:
+        # Image conditions × EEG repetitions × EEG channels × EEG time points
+        sorted_data = np.zeros((len(img_cond),max_rep,data.shape[1],
+            data.shape[2]))
+        for i in range(len(img_cond)):
+            # Find the indices of the selected image condition
+            idx = np.where(events == img_cond[i])[0]
+            # Randomly select only the max number of EEG repetitions
+            idx = shuffle(idx, random_state=seed, n_samples=max_rep)
+            sorted_data[i] = data[idx]
+        del data
+        epoched_data.append(sorted_data)
+        img_conditions.append(img_cond)
+        del sorted_data
 
-	### Output ###
-	return epoched_data, img_conditions, ch_names, times
+    ### Output ###
+    return epoched_data, img_conditions, ch_names, times
 
 def mvnn_THINGS2(args, epoched_test, epoched_train):
 	"""Compute the covariance matrices of the EEG data (calculated for each
@@ -183,100 +186,99 @@ def mvnn_THINGS2(args, epoched_test, epoched_train):
 
 def save_prepr_THINGS2(args, whitened_test, whitened_train, img_conditions_train,
 	ch_names, times, seed):
-	"""Merge the EEG data of all sessions together, shuffle the EEG repetitions
-	across sessions and reshaping the data to the format:
-	Image conditions × EGG repetitions × EEG channels × EEG time points.
-	Then, the data of both test and training EEG partitions is saved.
+    """Merge the EEG data of all sessions together, shuffle the EEG repetitions
+    across sessions and reshaping the data to the format:
+    Image conditions × EGG repetitions × EEG channels × EEG time points.
+    Then, the data of both test and training EEG partitions is saved.
 
-	Parameters
-	----------
-	args : Namespace
-		Input arguments.
-	whitened_test : list of float
-		Whitened test EEG data.
-	whitened_train : list of float
-		Whitened training EEG data.
-	img_conditions_train : list of int
-		Unique image conditions of the epoched and sorted train EEG data.
-	ch_names : list of str
-		EEG channel names.
-	times : float
-		EEG time points.
-	seed : int
-		Random seed.
+    Parameters
+    ----------
+    args : Namespace
+        Input arguments.
+    whitened_test : list of float
+        Whitened test EEG data.
+    whitened_train : list of float
+        Whitened training EEG data.
+    img_conditions_train : list of int
+        Unique image conditions of the epoched and sorted train EEG data.
+    ch_names : list of str
+        EEG channel names.
+    times : float
+        EEG time points.
+    seed : int
+        Random seed.
 
-	"""
+    """
+    import os
+    import numpy as np
+    from sklearn.utils import shuffle
 
-	import numpy as np
-	from sklearn.utils import shuffle
-	import os
+    ### Merge and save the test data ###
+    for s in range(args.n_ses):
+        if s == 0:
+            merged_test = whitened_test[s]
+        else:
+            merged_test = np.append(merged_test, whitened_test[s], 1)
+    del whitened_test
+    # Shuffle the repetitions of different sessions
+    idx = shuffle(np.arange(0, merged_test.shape[1]), random_state=seed)
+    merged_test = merged_test[:,idx]
+    # Insert the data into a dictionary
+    test_dict = {
+        'preprocessed_eeg_data': merged_test,
+        'ch_names': ch_names,
+        'times': times
+    }
+    del merged_test
+    # Saving directories
+    save_dir = os.path.join('dataset', 'THINGS_EEG2', f'preprocessed_data{args.adapt_to}', 
+                            'sub-'+format(args.subj,'02'))
+    file_name_test = 'preprocessed_eeg_test.npy'
+    file_name_train = 'preprocessed_eeg_training.npy'
+    # Create the directory if not existing and save the data
+    if os.path.isdir(save_dir) == False:
+        os.makedirs(save_dir)
+    np.save(os.path.join(save_dir, file_name_test), test_dict)
+    del test_dict
 
-	### Merge and save the test data ###
-	for s in range(args.n_ses):
-		if s == 0:
-			merged_test = whitened_test[s]
-		else:
-			merged_test = np.append(merged_test, whitened_test[s], 1)
-	del whitened_test
-	# Shuffle the repetitions of different sessions
-	idx = shuffle(np.arange(0, merged_test.shape[1]), random_state=seed)
-	merged_test = merged_test[:,idx]
-	# Insert the data into a dictionary
-	test_dict = {
-		'preprocessed_eeg_data': merged_test,
-		'ch_names': ch_names,
-		'times': times
-	}
-	del merged_test
-	# Saving directories
-	save_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data', 
-                         'sub-'+format(args.subj,'02'))
-	file_name_test = 'preprocessed_eeg_test.npy'
-	file_name_train = 'preprocessed_eeg_training.npy'
-	# Create the directory if not existing and save the data
-	if os.path.isdir(save_dir) == False:
-		os.makedirs(save_dir)
-	np.save(os.path.join(save_dir, file_name_test), test_dict)
-	del test_dict
-
-	### Merge and save the training data ###
-	for s in range(args.n_ses):
-		if s == 0:
-			white_data = whitened_train[s]
-			img_cond = img_conditions_train[s]
-		else:
-			white_data = np.append(white_data, whitened_train[s], 0)
-			img_cond = np.append(img_cond, img_conditions_train[s], 0)
-	del whitened_train, img_conditions_train
-	# Data matrix of shape:
-	# Image conditions × EGG repetitions × EEG channels × EEG time points
-	merged_train = np.zeros((len(np.unique(img_cond)), white_data.shape[1]*2,
-		white_data.shape[2],white_data.shape[3]))
-	for i in range(len(np.unique(img_cond))):
-		# Find the indices of the selected category
-		idx = np.where(img_cond == i+1)[0]
-		for r in range(len(idx)):
-			if r == 0:
-				ordered_data = white_data[idx[r]]
-			else:
-				ordered_data = np.append(ordered_data, white_data[idx[r]], 0)
-		merged_train[i] = ordered_data
-	# Shuffle the repetitions of different sessions
-	idx = shuffle(np.arange(0, merged_train.shape[1]), random_state=seed)
-	merged_train = merged_train[:,idx]
-	# Insert the data into a dictionary
-	train_dict = {
-		'preprocessed_eeg_data': merged_train,
-		'ch_names': ch_names,
-		'times': times
-	}
-	del merged_train
-	# Create the directory if not existing and save the data
-	if os.path.isdir(save_dir) == False:
-		os.makedirs(save_dir)
-	np.save(os.path.join(save_dir, file_name_train),
-		train_dict)
-	del train_dict
+    ### Merge and save the training data ###
+    for s in range(args.n_ses):
+        if s == 0:
+            white_data = whitened_train[s]
+            img_cond = img_conditions_train[s]
+        else:
+            white_data = np.append(white_data, whitened_train[s], 0)
+            img_cond = np.append(img_cond, img_conditions_train[s], 0)
+    del whitened_train, img_conditions_train
+    # Data matrix of shape:
+    # Image conditions × EGG repetitions × EEG channels × EEG time points
+    merged_train = np.zeros((len(np.unique(img_cond)), white_data.shape[1]*2,
+        white_data.shape[2],white_data.shape[3]))
+    for i in range(len(np.unique(img_cond))):
+        # Find the indices of the selected category
+        idx = np.where(img_cond == i+1)[0]
+        for r in range(len(idx)):
+            if r == 0:
+                ordered_data = white_data[idx[r]]
+            else:
+                ordered_data = np.append(ordered_data, white_data[idx[r]], 0)
+        merged_train[i] = ordered_data
+    # Shuffle the repetitions of different sessions
+    idx = shuffle(np.arange(0, merged_train.shape[1]), random_state=seed)
+    merged_train = merged_train[:,idx]
+    # Insert the data into a dictionary
+    train_dict = {
+        'preprocessed_eeg_data': merged_train,
+        'ch_names': ch_names,
+        'times': times
+    }
+    del merged_train
+    # Create the directory if not existing and save the data
+    if os.path.isdir(save_dir) == False:
+        os.makedirs(save_dir)
+    np.save(os.path.join(save_dir, file_name_train),
+        train_dict)
+    del train_dict
 
 def epoching_THINGS1(args):
     """The function preprocesses the raw EEG file: channel selection, 
