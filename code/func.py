@@ -49,6 +49,19 @@ def epoching_THINGS2(args, data_part, seed):
         info = mne.create_info(ch_names, sfreq, ch_types)
         raw = mne.io.RawArray(eeg_data, info)
         del eeg_data
+        
+        ### channel selection ###
+        if args.adapt_to == '_sleemory':
+        # Pick the main 56 sleemory channels (sleemory rejects 'Fpz' and 'Fz' and 
+        # keeps 'Cz')
+            channels = ['Fp1', 'Fp2', 'F3', 'F4', 'C3', 'C4', 'P3', 'P4', 'O1', 
+                        'O2', 'F7', 'F8', 'T7', 'T8', 'P7', 'P8', 'Cz', 'CPz', 
+                        'Pz', 'Oz', 'AF3', 'AF4', 'PO3', 'PO4', 'AF7', 'AF8', 
+                        'F1', 'F2', 'F5', 'F6', 'FC1', 'FC2', 'FC3', 'FC4', 'FC5', 
+                        'FC6', 'FT7', 'FT8', 'C1', 'C2', 'C5', 'C6', 'CP1', 'CP2', 
+                        'CP3', 'CP4', 'CP5', 'CP6', 'TP7', 'TP8', 'P1', 'P2', 
+                        'P5', 'P6', 'PO7', 'PO8', 'stim']
+            raw = raw.pick(channels)
 
         ### Get events, drop unused channels and reject target trials ###
         events = mne.find_events(raw, stim_channel='stim')
@@ -61,9 +74,9 @@ def epoching_THINGS2(args, data_part, seed):
         raw.set_eeg_reference()
         # Bandpass filter
         if args.adapt_to == '_sleemory':
-            raw.filter(l_freq=0.01, h_freq=30)
+            raw.filter(l_freq=0.01, h_freq=30, n_jobs=2)
         else:
-            raw.filter(l_freq=0.1, h_freq=100)
+            raw.filter(l_freq=0.1, h_freq=100, n_jobs=-1)
 
         ### Epoching, baseline correction and resampling ###
         # Epoching
@@ -76,6 +89,7 @@ def epoching_THINGS2(args, data_part, seed):
 
         ### Get epoched channels and times ###
         ch_names = epochs.info['ch_names']
+        print(len(ch_names))
         times = epochs.times
 
         ### Sort the data ###
@@ -210,6 +224,7 @@ def save_prepr_THINGS2(args, whitened_test, whitened_train, img_conditions_train
 
     """
     import os
+    import pickle
     import numpy as np
     from sklearn.utils import shuffle
 
@@ -276,8 +291,11 @@ def save_prepr_THINGS2(args, whitened_test, whitened_train, img_conditions_train
     # Create the directory if not existing and save the data
     if os.path.isdir(save_dir) == False:
         os.makedirs(save_dir)
-    np.save(os.path.join(save_dir, file_name_train),
-        train_dict)
+    if args.adapt_to == '_sleemory':
+        with open(os.path.join(save_dir, file_name_train), 'wb') as f: 
+            pickle.dump(train_dict, f, protocol=4) 
+    else:
+        np.save(os.path.join(save_dir, file_name_train), train_dict)
     del train_dict
 
 def epoching_THINGS1(args):
@@ -328,7 +346,7 @@ def epoching_THINGS1(args):
     raw = mne.io.read_raw_brainvision(TH1_EEG_dir, preload=True)
     
     ### channel selection ###
-    # Pick the main 63 channels
+    # Pick the main 63 channels (THINGS EEG1 has 'Fz' while THINGS EEG2 has 'Cz')
     channels = ['Fp1', 'F3', 'F7', 'FT9', 'FC5', 'FC1', 'C3', 'T7', 'TP9', 'CP5', 
     'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', 'P4', 'P8', 'TP10', 'CP6', 
     'CP2', 'Fz', 'C4', 'T8', 'FT10', 'FC6', 'FC2', 'F4', 'F8', 'Fp2', 
@@ -534,7 +552,7 @@ def train_model_THINGS2(args):
     ### Load the training DNN feature maps ###
     # Load the training DNN feature maps directory
     dnn_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'dnn_feature_maps')
-    # Load the training DNN feature maps (16540, 300)
+    # Load the training DNN feature maps (16540, num_feat)
     dnn_fmaps_train = np.load(os.path.join(dnn_train_dir, f'new_feature_maps_{args.num_feat}.npy'), 
                             allow_pickle=True)
 
@@ -569,8 +587,8 @@ def load_full_fmaps(args, p='training'):
 	import os
 	import numpy as np
 	from tqdm import tqdm
+ 
 	feats = []
-	# The dictionaries storing the dnn training feature maps in 3 stages
 	final_fmaps = {}
 	# The directory of the dnn training feature maps
 	fmaps_dir = os.path.join('dataset','THINGS_EEG2','dnn_feature_maps',
