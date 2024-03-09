@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
 parser.add_argument('--num_feat', default=300, type=int)
+parser.add_argument('--enc_img_range', default=[0, 100], nargs='+', type=float)
 args = parser.parse_args()
 
 print('')
@@ -77,19 +78,19 @@ ch_names = []
 for ch in data['channel_names'][:,0]:
     ch_names.append(ch[0])
 times = data['time']
+# set time
+t_sleemory, t_THINGS = times.shape[1], 250
 del data
 # Drop the extra channel 'Fpz' and 'Fz':
 idx_Fz, idx_Fpz = ch_names.index('Fz'), ch_names.index('Fpz')
 prepr_data = np.delete(prepr_data, [idx_Fz, idx_Fpz], axis=1)
-# # Average the training EEG data over time: (num_feat,num_ch)
-# prepr_data = np.mean(prepr_data, -1)
-# # Average the training EEG data across electrodes: (num_feat,)
-# prepr_data = np.mean(prepr_data, -1)
+# set channels
+num_ch = len(ch_names)-2
 
 # Predict the EEG data 
 pred_eeg = reg.predict(best_feat_test)
 # Reshape the predicted EEG data
-pred_eeg = np.reshape(pred_eeg, (pred_eeg.shape[0],56,250))
+pred_eeg = np.reshape(pred_eeg, (pred_eeg.shape[0], num_ch, t_THINGS))
 print('pred_eeg_data shape', pred_eeg.shape)
 
 # =============================================================================
@@ -100,34 +101,39 @@ print('pred_eeg_data shape', pred_eeg.shape)
 unique_imgs = np.unique(imgs_all)
 
 ### Test the encoding model ###
-enc_acc = np.empty((len(unique_imgs), 250, times.shape[1]))
+enc_acc = np.empty((100, t_THINGS, t_sleemory))
     
 # Iterate over images
-for i in tqdm(range(len(unique_imgs)), desc='sleemory images'):
-    img_indices = np.where(imgs_all == unique_imgs[i])[0]
+for idx, img in enumerate(tqdm(range(args.enc_img_range[0], args.enc_img_range[1]), desc='sleemory images')):
+    img_indices = np.where(imgs_all == unique_imgs[img])[0]
     # select corresponding prepr data
     select_data = prepr_data[img_indices]
     # Average across the same images
     select_data = np.mean(select_data, 0)
 
     # Calculate the encoding accuracy
-    for t_sleep in range(times.shape[1]):
-        for t_THINGS in range(250):
-            enc_acc[i, t_THINGS, t_sleep] = corr(pred_eeg[i,:,t_THINGS],
-                select_data[:,t_sleep])[0]
+    for t_s in range(t_sleemory):
+        for t_TH in range(t_THINGS):
+            enc_acc[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH],
+                select_data[:, t_s])[0]
 # Average the encoding accuracy across images
 enc_acc = np.mean(enc_acc, 0)
 print(enc_acc.shape)
+
+# Create the saving directory
+save_dir = 'output/sleemory/enc_acc'
+if os.path.isdir(save_dir) == False:
+    os.makedirs(save_dir)
+    
+# Save the results
+with open(os.path.join(save_dir, f'enc_acc_{args.enc_img_range[0]}'), 
+          'wb') as f: 
+    pickle.dump(enc_acc, f, protocol=4) 
 
 # =============================================================================
 # Plot the correlation results
 # =============================================================================
     
-# Create the saving directory
-save_dir = 'output/sleemory'
-if os.path.isdir(save_dir) == False:
-    os.makedirs(save_dir)
-
 # Plot all 2D results
 fig = plt.figure(figsize=(6, 5))
 im = plt.imshow(enc_acc, cmap='viridis',
@@ -145,7 +151,7 @@ plt.xlabel('THINGS time / s')
 plt.ylabel('Sleemory time / s')
 plt.title(f'Encoding accuracy')
 fig.tight_layout()
-plt.savefig(os.path.join(save_dir, f'encoding accuracy'))
+plt.savefig(os.path.join(save_dir, f'encoding accuracy plot {args.enc_img_range[0]}'))
 
 # # Plot the diagonal
 # fig = plt.figure(figsize=(6, 3))
