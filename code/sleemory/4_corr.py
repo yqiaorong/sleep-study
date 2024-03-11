@@ -18,7 +18,7 @@ parser.add_argument('--enc_img_range', default=[0, 100], nargs='+', type=float)
 args = parser.parse_args()
 
 print('')
-print(f'>>> Test the encoding model on sleemory <<<')
+print(f'>>> Test the encoding model on sleemory (channel) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -35,7 +35,7 @@ fmaps_dir = os.path.join('dataset','temp_sleemory','dnn_feature_maps',
                         'pretrained-'+str(args.pretrained))
 fmaps_list = os.listdir(fmaps_dir)
 fmaps_list.sort()
-for f, fmaps in enumerate(tqdm(fmaps_list, desc='load sleemory training images')):
+for f, fmaps in enumerate(tqdm(fmaps_list, desc='load sleemory images')):
     fmaps_data = np.load(os.path.join(fmaps_dir, fmaps),
                             allow_pickle=True).item()
     all_layers = fmaps_data.keys()
@@ -99,12 +99,21 @@ print('pred_eeg_data shape', pred_eeg.shape)
 
 # Find indices in A that match the first element of B
 unique_imgs = np.unique(imgs_all)
+unique_imgs = [item for img in unique_imgs for item in img]
+
+image_set_list = os.listdir('dataset/temp_sleemory/image_set')
+
+# There is one extra fmap which should be dropped from pred eeg
+exclude_img = list(set(image_set_list)-set(unique_imgs))
+exclude_idx_in_img_set = image_set_list.index(exclude_img[0])
+pred_eeg = np.delete(pred_eeg, exclude_idx_in_img_set, axis=0)
 
 ### Test the encoding model ###
 enc_acc = np.empty((100, t_THINGS, t_sleemory))
     
 # Iterate over images
-for idx, img in enumerate(tqdm(range(args.enc_img_range[0], args.enc_img_range[1]), desc='sleemory images')):
+for idx, img in enumerate(tqdm(range(args.enc_img_range[0], args.enc_img_range[1]), 
+                               desc='sleemory images')):
     img_indices = np.where(imgs_all == unique_imgs[img])[0]
     # select corresponding prepr data
     select_data = prepr_data[img_indices]
