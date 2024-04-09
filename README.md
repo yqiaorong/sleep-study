@@ -31,3 +31,13 @@ The order of running the scripts:
 * encoding_model.py --num_feat (This file trains the linear regression model on THINGS EEG2 training data. )
 
 * correlation.py --test_dataset --num_feat  (THINGS_EEG2/THINGS_EEG1) (This file tests the encoding model on either THINGS EEG2 test data or THINGS EEG1 data.)
+
+sleemory/
+
+* 1_alexnet.py
+
+* 2_img_feat_selection.py
+
+* 3_enc_model.py
+
+* 4_corr_img.py --num_feat (This script calculates the encoding accuracy on sleemory which correlates the eeg of all unique imgs at every channel every time point. )

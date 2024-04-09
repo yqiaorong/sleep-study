@@ -45,7 +45,7 @@ for f, fmaps in enumerate(tqdm(fmaps_list, desc='load sleemory images')):
             feats[l].append([np.reshape(fmaps_data[dnn_layer], -1)])
     
 fmaps_test[args.layer_name] = np.squeeze(np.asarray(feats[l]))
-print(f'The original fmaps shape', fmaps_test[args.layer_name].shape)
+print(f'The original fmaps shape (img, feat)', fmaps_test[args.layer_name].shape)
 
 # =============================================================================
 # Load the feature selection model and apply feature selection to test fmaps
@@ -55,7 +55,7 @@ model_path = 'dataset/temp_sleemory'
 feat = pickle.load(open(os.path.join(model_path, 
                                      f'feat_model_{args.num_feat}.pkl'), 'rb'))
 best_feat_test = feat.transform(fmaps_test[args.layer_name])
-print(f'The new fmaps shape {best_feat_test.shape}')
+print(f'The new fmaps shape (img, feat) {best_feat_test.shape}')
 
 # =============================================================================
 # Load the encoding model
@@ -83,6 +83,8 @@ del data
 # Drop the extra channel 'Fpz' and 'Fz':
 idx_Fz, idx_Fpz = ch_names.index('Fz'), ch_names.index('Fpz')
 prepr_data = np.delete(prepr_data, [idx_Fz, idx_Fpz], axis=1)
+print('Original test_eeg_data shape (img, ch, time)', prepr_data.shape)
+
 # set channels
 num_ch = len(ch_names)-2
 
@@ -90,7 +92,7 @@ num_ch = len(ch_names)-2
 pred_eeg = reg.predict(best_feat_test)
 # Reshape the predicted EEG data
 pred_eeg = np.reshape(pred_eeg, (pred_eeg.shape[0], num_ch, t_THINGS))
-print('pred_eeg_data shape', pred_eeg.shape)
+print('Original pred_eeg_data shape (img, ch, time)', pred_eeg.shape)
 
 # =============================================================================
 # Categorize the preprocessed data
@@ -106,6 +108,7 @@ image_set_list = os.listdir('dataset/temp_sleemory/image_set')
 exclude_img = list(set(image_set_list)-set(unique_imgs))
 exclude_idx_in_img_set = image_set_list.index(exclude_img[0])
 pred_eeg = np.delete(pred_eeg, exclude_idx_in_img_set, axis=0)
+print("One img is dropped from pred eeg since it's absent in test eeg.")
 
 # cross check the order of unique images
 for i, j in zip(unique_imgs, image_set_list[1:]):
@@ -116,6 +119,7 @@ for i, j in zip(unique_imgs, image_set_list[1:]):
         break
 
 # Sort the test eeg data
+
 test_eeg = np.empty((len(unique_imgs), num_ch, t_sleemory))
 # Iterate over images
 for idx, img in enumerate(tqdm(unique_imgs, desc='average test eeg across unique images')):
@@ -125,10 +129,16 @@ for idx, img in enumerate(tqdm(unique_imgs, desc='average test eeg across unique
     # Average across the same images
     select_data = np.mean(select_data, 0)
     test_eeg[idx] = select_data
-    
-### Test the encoding model ###
-enc_acc = np.empty((num_ch, t_THINGS, t_sleemory))
+
+# =============================================================================
+# Test the encoding model
+# =============================================================================
+
+print('Final pred_eeg_data shape (img, ch, time)', pred_eeg.shape)
+print('Final test_eeg_data shape (img, ch, time)', test_eeg.shape)
+
 # Calculate the encoding accuracy
+enc_acc = np.empty((num_ch, t_THINGS, t_sleemory))
 for ch in tqdm(range(num_ch), desc='correlation over channels'): # iterate over channels
     for t_s in range(t_sleemory):
         for t_TH in range(t_THINGS):
@@ -162,6 +172,6 @@ plt.xlim([-0.2, 0.8])
 plt.ylim([-0.25, 1])
 plt.xlabel('THINGS time / s')
 plt.ylabel('Sleemory time / s')
-plt.title(f'Encoding accuracy (img)')
+plt.title(f'Encoding accuracy (img) with {args.num_feat} features')
 fig.tight_layout()
-plt.savefig(os.path.join(save_dir, f'encoding accuracy plot (img)'))
+plt.savefig(os.path.join(save_dir, f'encoding accuracy ({args.num_feat} feats)'))

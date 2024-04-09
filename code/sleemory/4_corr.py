@@ -13,7 +13,7 @@ from scipy.stats import pearsonr as corr
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
-parser.add_argument('--num_feat', default=300, type=int)
+parser.add_argument('--num_feat', default=1000, type=int)
 parser.add_argument('--enc_img_range', default=[0, 100], nargs='+', type=float)
 args = parser.parse_args()
 
