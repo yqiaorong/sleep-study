@@ -22,15 +22,17 @@ The download path: ../code/
 
 The order of running the scripts: 
 
-* run_all_scripts.py --sfreq --adapt_to (This file preprocesses all THINGS EEG2 and EEG1 raw data. If it's adapted to sleemory, sfreq = 250, adapt_to = _sleemory )
+* preprocess_all.py --sfreq --adapt_to (This file preprocesses all THINGS EEG2 and EEG1 raw data. If it's adapted to sleemory, sfreq = 250, adapt_to = _sleemory )
 
-* THINGS_alexnet.py (This file extracts THINGS images features by Alexnet. )
+THINGS/
 
-* image_feature_selection.py --num_feat (This file selects the best 300 features of THINGS images features based on THINGS EEG2 training data.)
+* 1_alexnet.py (This file extracts THINGS images features by Alexnet. )
 
-* encoding_model.py --num_feat (This file trains the linear regression model on THINGS EEG2 training data. )
+* 2_img_feat_selection.py --num_feat (This file selects the best 300 features of THINGS images features based on THINGS EEG2 training data.)
 
-* correlation.py --test_dataset --num_feat  (THINGS_EEG2/THINGS_EEG1) (This file tests the encoding model on either THINGS EEG2 test data or THINGS EEG1 data.)
+* 3_enc_model.py --num_feat (This file trains the linear regression model on THINGS EEG2 training data. )
+
+* 4_corr.py --test_dataset --num_feat  (THINGS_EEG2/THINGS_EEG1) (This file tests the encoding model on either THINGS EEG2 test data or THINGS EEG1 data.)
 
 sleemory/
 
