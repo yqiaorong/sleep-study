@@ -8,6 +8,7 @@ from func import load_full_fmaps
 # =============================================================================
 # Input arguments
 # =============================================================================
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)

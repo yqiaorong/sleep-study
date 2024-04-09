@@ -82,3 +82,48 @@ def train_model_THINGS2(args):
     # Train the encoding models
     reg = LinearRegression().fit(dnn_fmaps_train, eeg_data_train)
     return reg
+
+def mvnn_sleemory(epoched_data):
+    """Compute the covariance matrices of the EEG data (calculated for each
+    time-point or epoch of each image condition), and then average them 
+    across image conditions. The inverse of the resulting averaged covariance
+    matrix is used to whiten the EEG data.
+
+    Parameters
+    ----------
+    epoched_data : array of shape (image,channel,time)
+        Epoched EEG data.
+
+    Returns
+    -------
+    whitened_data : array of shape (image,channel,time)
+        Whitened EEG data.
+    """
+
+    import numpy as np
+    from sklearn.discriminant_analysis import _cov
+    import scipy
+
+    whitened_data = []
+    # Notations
+    img_cond = epoched_data.shape[0]
+    num_ch = epoched_data.shape[1]
+    num_time = epoched_data.shape[2]
+
+    ### Compute the covariance matrices ###
+    # Covariance matrix of shape:
+    # EEG channels × EEG channels
+    # sigma = _cov(epoched_data.T, shrinkage='auto')
+    sigma = np.mean([_cov(epoched_data[:,:,t], shrinkage='auto') 
+                     for t in range(num_time)],
+                     axis=0)
+    
+    # Compute the inverse of the covariance matrix
+    sigma_inv = scipy.linalg.fractional_matrix_power(sigma, -0.5) 
+    # The matrix power is -0.5, which represents inverse square root
+    
+    ### Whiten the data ###
+    whitened_data = (epoched_data.swapaxes(1, 2) @ sigma_inv).swapaxes(1, 2)
+    
+    ### Output ###
+    return whitened_data

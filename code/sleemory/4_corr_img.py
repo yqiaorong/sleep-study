@@ -4,6 +4,7 @@ import pickle
 import argparse
 import numpy as np
 from tqdm import tqdm
+from func import mvnn_sleemory
 from matplotlib import pyplot as plt
 from scipy.stats import pearsonr as corr
 
@@ -14,6 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
 parser.add_argument('--num_feat', default=1000, type=int)
+parser.add_argument('--z_score', default=True, type=bool)
 args = parser.parse_args()
 
 print('')
@@ -119,7 +121,6 @@ for i, j in zip(unique_imgs, image_set_list[1:]):
         break
 
 # Sort the test eeg data
-
 test_eeg = np.empty((len(unique_imgs), num_ch, t_sleemory))
 # Iterate over images
 for idx, img in enumerate(tqdm(unique_imgs, desc='average test eeg across unique images')):
@@ -129,6 +130,12 @@ for idx, img in enumerate(tqdm(unique_imgs, desc='average test eeg across unique
     # Average across the same images
     select_data = np.mean(select_data, 0)
     test_eeg[idx] = select_data
+
+# z scored test eeg data
+if args.z_score == True:
+    test_eeg = mvnn_sleemory(args, test_eeg)
+else:
+    pass
 
 # =============================================================================
 # Test the encoding model
@@ -146,7 +153,7 @@ for ch in tqdm(range(num_ch), desc='correlation over channels'): # iterate over 
                 test_eeg[:, ch, t_s])[0]
 # Average the encoding accuracy across channels
 enc_acc = np.mean(enc_acc, 0)
-print(enc_acc.shape)
+print(f'The shape of encoding accuracy: {enc_acc.shape}')
 
 # Create the saving directory
 save_dir = 'output/sleemory/enc_acc'
@@ -174,4 +181,5 @@ plt.xlabel('THINGS time / s')
 plt.ylabel('Sleemory time / s')
 plt.title(f'Encoding accuracy (img) with {args.num_feat} features')
 fig.tight_layout()
-plt.savefig(os.path.join(save_dir, f'encoding accuracy ({args.num_feat} feats)'))
+plt.savefig(os.path.join(save_dir, 
+                         f'encoding accuracy ({args.num_feat} feats) z scored {args.z_score} '))

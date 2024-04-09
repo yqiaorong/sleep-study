@@ -21,6 +21,7 @@ from PIL import Image
 # =============================================================================
 # Input arguments
 # =============================================================================
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
@@ -41,6 +42,7 @@ torch.use_deterministic_algorithms(True)
 # =============================================================================
 # Select the layers of interest and import the model
 # =============================================================================
+
 # Lists of AlexNet convolutional and fully connected layers
 conv_layers = ['conv1', 'ReLU1', 'maxpool1', 'conv2', 'ReLU2', 'maxpool2',
 	'conv3', 'ReLU3', 'conv4', 'ReLU4', 'conv5', 'ReLU5', 'maxpool5']
@@ -69,6 +71,7 @@ model.eval()
 # =============================================================================
 # Define the image preprocessing
 # =============================================================================
+
 centre_crop = trn.Compose([
 	trn.Resize((224,224)),
 	trn.ToTensor(),
@@ -78,6 +81,7 @@ centre_crop = trn.Compose([
 # =============================================================================
 # Load the THINGS images and extract the corresponding feature maps
 # =============================================================================
+
 # Extract the feature maps of (1) training images, (2) test images.
 
 # The main image directory
