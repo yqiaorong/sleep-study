@@ -42,4 +42,6 @@ sleemory/
 
 * 3_enc_model.py
 
-* 4_corr_img.py --num_feat (This script calculates the encoding accuracy on sleemory which correlates the eeg of all unique imgs at every channel every time point. )
+* 4_corr.py --num_feat --z_score --method (This script calculates the encoding accuracy on sleemory which correlates the eeg of all unique imgs at every channel every time point. )
+
+* 5_corr_all.py
