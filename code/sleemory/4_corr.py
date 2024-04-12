@@ -4,6 +4,7 @@ import pickle
 import argparse
 import numpy as np
 from tqdm import tqdm
+from func import mvnn, mvnn_mean
 from matplotlib import pyplot as plt
 from scipy.stats import pearsonr as corr
 
@@ -18,7 +19,7 @@ parser.add_argument('--enc_img_range', default=[0, 100], nargs='+', type=float)
 args = parser.parse_args()
 
 print('')
-print(f'>>> Test the encoding model on sleemory (channel) <<<')
+print(f'>>> Test the encoding model on sleemory (pattern) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -46,7 +47,7 @@ for f, fmaps in enumerate(tqdm(fmaps_list, desc='load sleemory images')):
             feats[l].append([np.reshape(fmaps_data[dnn_layer], -1)])
     
 fmaps_test[args.layer_name] = np.squeeze(np.asarray(feats[l]))
-print(f'The original fmaps shape', fmaps_test[args.layer_name].shape)
+print(f'The original fmaps shape (img, feat)', fmaps_test[args.layer_name].shape)
 
 # =============================================================================
 # Load the feature selection model and apply feature selection to test fmaps
@@ -56,7 +57,7 @@ model_path = 'dataset/temp_sleemory'
 feat = pickle.load(open(os.path.join(model_path, 
                                      f'feat_model_{args.num_feat}.pkl'), 'rb'))
 best_feat_test = feat.transform(fmaps_test[args.layer_name])
-print(f'The new fmaps shape {best_feat_test.shape}')
+print(f'The new fmaps shape (img, feat) {best_feat_test.shape}')
 
 # =============================================================================
 # Load the encoding model
@@ -84,6 +85,8 @@ del data
 # Drop the extra channel 'Fpz' and 'Fz':
 idx_Fz, idx_Fpz = ch_names.index('Fz'), ch_names.index('Fpz')
 prepr_data = np.delete(prepr_data, [idx_Fz, idx_Fpz], axis=1)
+print('Original test_eeg_data shape (img, ch, time)', prepr_data.shape)
+
 # set channels
 num_ch = len(ch_names)-2
 
@@ -91,7 +94,7 @@ num_ch = len(ch_names)-2
 pred_eeg = reg.predict(best_feat_test)
 # Reshape the predicted EEG data
 pred_eeg = np.reshape(pred_eeg, (pred_eeg.shape[0], num_ch, t_THINGS))
-print('pred_eeg_data shape', pred_eeg.shape)
+print('pred_eeg_data shape (img, ch, time)', pred_eeg.shape)
 
 # =============================================================================
 # Categorize the preprocessed data
@@ -107,43 +110,74 @@ image_set_list = os.listdir('dataset/temp_sleemory/image_set')
 exclude_img = list(set(image_set_list)-set(unique_imgs))
 exclude_idx_in_img_set = image_set_list.index(exclude_img[0])
 pred_eeg = np.delete(pred_eeg, exclude_idx_in_img_set, axis=0)
+print("One img is dropped from pred eeg since it's absent in test eeg.")
 
-### Test the encoding model ###
-enc_acc = np.empty((100, t_THINGS, t_sleemory))
-    
+# Sort the test eeg data
+test_eeg = np.empty((len(unique_imgs), num_ch, t_sleemory)) # storing mean EEG for each img
+tot_test_eeg = [] # storing all EEG for each img
 # Iterate over images
-for idx, img in enumerate(tqdm(range(args.enc_img_range[0], args.enc_img_range[1]), 
-                               desc='sleemory images')):
-    img_indices = np.where(imgs_all == unique_imgs[img])[0]
+for idx, img in enumerate(tqdm(unique_imgs, desc='Average test eeg across unique images')):
+    img_indices = np.where(imgs_all == img)[0]
     # select corresponding prepr data
     select_data = prepr_data[img_indices]
+    # Append data
+    tot_test_eeg.append(select_data)
+    
     # Average across the same images
     select_data = np.mean(select_data, 0)
+    test_eeg[idx] = select_data
+    
+# =============================================================================
+# Z score the data
+# =============================================================================
 
-    # Calculate the encoding accuracy
-    for t_s in range(t_sleemory):
-        for t_TH in range(t_THINGS):
-            enc_acc[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH],
-                select_data[:, t_s])[0]
-# Average the encoding accuracy across images
-enc_acc = np.mean(enc_acc, 0)
-print(enc_acc.shape)
+if args.z_score == True:
+    test_eeg = mvnn_mean(test_eeg)
+    tot_test_eeg = mvnn(tot_test_eeg)
+else:
+    pass
 
+# Average z scored total test eeg data
+test_eeg2 = np.empty(test_eeg.shape)
+for i, data in enumerate(tot_test_eeg):
+    new_data = np.mean(data, axis=0)
+    test_eeg2[i] = new_data
+del tot_test_eeg
+
+# =============================================================================
+# Test the encoding model
+# =============================================================================
+
+print('Final pred_eeg_data shape (img, ch, time)', pred_eeg.shape)
+print('Final test_eeg_data shape (img, ch, time)', test_eeg.shape, test_eeg2.shape)
+
+img_cond_idx = 0
+
+# Calculate the encoding accuracy
+enc_acc = np.empty((t_THINGS, t_sleemory))
+enc_acc2 = np.empty((t_THINGS, t_sleemory))
+for t_s in range(t_sleemory):
+    for t_TH in range(t_THINGS):
+        enc_acc[t_TH, t_s] = corr(pred_eeg[img_cond_idx, :, t_TH],
+                                    data[img_cond_idx, :, t_s])[0]
+        enc_acc2[t_TH, t_s] = corr(pred_eeg[img_cond_idx, :, t_TH],
+                                    data[img_cond_idx, :, t_s])[0]
+        
 # Create the saving directory
 save_dir = 'output/sleemory/enc_acc'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
     
-# Save the results
-with open(os.path.join(save_dir, f'enc_acc_{args.enc_img_range[0]}'), 
-          'wb') as f: 
-    pickle.dump(enc_acc, f, protocol=4) 
+# # Save the results
+# with open(os.path.join(save_dir, f'enc_acc_{args.enc_img_range[0]}'), 
+#           'wb') as f: 
+#     pickle.dump(enc_acc, f, protocol=4) 
 
 # =============================================================================
 # Plot the correlation results
 # =============================================================================
     
-# Plot all 2D results
+# Plot all 2D results of method 1
 fig = plt.figure(figsize=(6, 5))
 im = plt.imshow(enc_acc, cmap='viridis',
 				extent=[-0.2, 0.8, -0.25, 1], 
@@ -153,27 +187,29 @@ cbar.set_label('Values')
 # Plot borders
 plt.plot([-0.2, 0.8], [0,0], 'k--', lw=0.4)
 plt.plot([0,0], [-0.25, 1], 'k--', lw=0.4)
-
 plt.xlim([-0.2, 0.8])
 plt.ylim([-0.25, 1])
 plt.xlabel('THINGS time / s')
 plt.ylabel('Sleemory time / s')
-plt.title(f'Encoding accuracy')
+plt.title(f'Encoding accuracy (pattern) with {args.num_feat} features')
 fig.tight_layout()
-plt.savefig(os.path.join(save_dir, f'encoding accuracy plot {args.enc_img_range[0]}'))
+plt.savefig(os.path.join(save_dir, f'enc acc (pattern) M1 ({args.num_feat} feats) z scored {args.z_score}'))
 
-# # Plot the diagonal
-# fig = plt.figure(figsize=(6, 3))
-# # Select the diagonal elements
-# diag_enc_acc = []
-# for t in range(250):
-#     diag_enc_acc.append(enc_acc[t,t])
-# plt.plot(np.linspace(-0.2, 0.8, 250), diag_enc_acc)
-# # Plot borders
-# plt.plot([-0.2, 0.8], [0,0], 'k--', lw=0.4)
-# plt.plot([0,0], [-0.25, 1], 'k--', lw=0.4)
-# plt.xlabel('THINGS time / s')
-# plt.ylabel('Accuracy')
-# plt.title(f'Diagonal encoding accuracy')
-# fig.tight_layout()
-# plt.savefig(os.path.join(save_dir, f'diagonal encoding accuracy'))
+# Plot all 2D results of method 2
+fig = plt.figure(figsize=(6, 5))
+im = plt.imshow(enc_acc2, cmap='viridis',
+				extent=[-0.2, 0.8, -0.25, 1], 
+                origin='lower', aspect='auto')
+cbar = plt.colorbar(im)
+cbar.set_label('Values')
+# Plot borders
+plt.plot([-0.2, 0.8], [0,0], 'k--', lw=0.4)
+plt.plot([0,0], [-0.25, 1], 'k--', lw=0.4)
+plt.xlim([-0.2, 0.8])
+plt.ylim([-0.25, 1])
+plt.xlabel('THINGS time / s')
+plt.ylabel('Sleemory time / s')
+plt.title(f'Encoding accuracy (pattern) with {args.num_feat} features')
+fig.tight_layout()
+plt.savefig(os.path.join(save_dir, 
+                         f'enc acc (pattern) M2 ({args.num_feat} feats) z scored {args.z_score} '))
