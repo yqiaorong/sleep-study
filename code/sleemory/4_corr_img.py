@@ -16,8 +16,9 @@ parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
 parser.add_argument('--num_feat', default=1000, type=int)
 parser.add_argument('--z_score', default=True, type=bool)
-parser.add_argument('--method', default='img_cond', type=str) # img_cond or pattern or pattern_all
-parser.add_argument('--img_cond_idx', default=-1, type=int) 
+parser.add_argument('--method', default='img_cond', type=str) # [img_cond / pattern / pattern_all]
+parser.add_argument('--img_cond_idx', default=-1, type=int) # for [pattern]
+parser.add_argument('--pattern_all_range', default=[0, -1], nargs='+', type=int) # for [pattern_all]
 args = parser.parse_args()
 
 print('')
@@ -221,11 +222,11 @@ elif args.method == 'pattern':
     plot_name1 = f'{args.img_cond_idx:003d}' + plot_name1
     plot_name2 = f'{args.img_cond_idx:003d}' + plot_name2
 elif args.method == 'pattern_all': # This one is so time consuming!
-    num_img_cond = pred_eeg.shape[0]
+    num_img_cond = args.pattern_all_range[1] - args.pattern_all_range[0]
     
     enc_acc = np.empty((num_img_cond, t_THINGS, t_sleemory))
     enc_acc2 = np.empty((num_img_cond, t_THINGS, t_sleemory))
-    for i in tqdm(range(num_img_cond), desc='Coorelation: img cond'):
+    for i in tqdm(range(args.pattern_all_range[0], args.pattern_all_range[1]), desc='Coorelation: img cond'):
         for t_s in range(t_sleemory):
             for t_TH in range(t_THINGS):
                 enc_acc[i, t_TH, t_s] = corr(pred_eeg[i, :, t_TH], test_eeg[i, :, t_s])[0]
@@ -233,6 +234,21 @@ elif args.method == 'pattern_all': # This one is so time consuming!
     # Average across img cond
     enc_acc = np.mean(enc_acc, axis=0)
     enc_acc2 = np.mean(enc_acc2, axis=0)
+    
+    # modify save dir
+    save_dir = os.path.join(save_dir, f'enc acc ({args.method})')
+    if os.path.isdir(save_dir) == False:
+        os.makedirs(save_dir)
+    # Change plot names
+    plot_name1 = f'{args.pattern_all_range[0]}_{args.pattern_all_range[1]}' + plot_name1
+    plot_name2 = f'{args.pattern_all_range[0]}_{args.pattern_all_range[1]}' + plot_name2
+    
+    # # Save the results
+    enc_acc_result = {'enc_acc': enc_acc, 'enc_acc2': enc_acc2}
+    with open(os.path.join(save_dir, 
+                           f'enc_acc_{args.pattern_all_range[0]}_{args.pattern_all_range[1]}'), 
+              'wb') as f: 
+        pickle.dump(enc_acc_result, f, protocol=4) 
             
 print(f'The shape of encoding accuracy: {enc_acc.shape}, {enc_acc2.shape}')
 
