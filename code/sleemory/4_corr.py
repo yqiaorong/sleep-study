@@ -195,7 +195,7 @@ plot_name2 = f'enc acc ({args.method}) M2 ({args.num_feat} feats) z scored {args
 if args.method == 'img_cond':
     enc_acc = np.empty((num_ch, t_THINGS, t_sleemory))
     enc_acc2 = np.empty((num_ch, t_THINGS, t_sleemory))
-    for ch in tqdm(range(num_ch), desc='Correlation: channel'): # iterate over channels
+    for ch in tqdm(range(num_ch), desc='Correlation: img patterns'): # iterate over channels
         for t_s in range(t_sleemory):
             for t_TH in range(t_THINGS):
                 enc_acc[ch, t_TH, t_s] = corr(pred_eeg[:, ch, t_TH], test_eeg[:, ch, t_s])[0]
@@ -207,7 +207,7 @@ elif args.method == 'pattern':
     
     enc_acc = np.empty((t_THINGS, t_sleemory))
     enc_acc2 = np.empty((t_THINGS, t_sleemory))
-    for t_s in tqdm(range(t_sleemory), desc='Correlation: sleemory time'):
+    for t_s in tqdm(range(t_sleemory), desc='Correlation: EEG patterns'):
         for t_TH in range(t_THINGS):
             enc_acc[t_TH, t_s] = corr(pred_eeg[args.img_cond_idx, :, t_TH],
                                         test_eeg[args.img_cond_idx, :, t_s])[0]
@@ -226,30 +226,33 @@ elif args.method == 'pattern_all': # This one is so time consuming!
     
     enc_acc = np.empty((num_img_cond, t_THINGS, t_sleemory))
     enc_acc2 = np.empty((num_img_cond, t_THINGS, t_sleemory))
-    for i in tqdm(range(args.pattern_all_range[0], args.pattern_all_range[1]), desc='Coorelation: img cond'):
+    for idx, item in enumerate(tqdm(range(args.pattern_all_range[0], args.pattern_all_range[1]), 
+                                    desc='Coorelation: EEG patterns')):
         for t_s in range(t_sleemory):
             for t_TH in range(t_THINGS):
-                enc_acc[i, t_TH, t_s] = corr(pred_eeg[i, :, t_TH], test_eeg[i, :, t_s])[0]
-                enc_acc2[i, t_TH, t_s] = corr(pred_eeg[i, :, t_TH], test_eeg2[i, :, t_s])[0]
-    # Average across img cond
-    enc_acc = np.mean(enc_acc, axis=0)
-    enc_acc2 = np.mean(enc_acc2, axis=0)
+                enc_acc[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH], test_eeg[idx, :, t_s])[0]
+                enc_acc2[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH], test_eeg2[idx, :, t_s])[0]
     
     # modify save dir
     save_dir = os.path.join(save_dir, f'enc acc ({args.method})')
     if os.path.isdir(save_dir) == False:
         os.makedirs(save_dir)
-    # Change plot names
-    plot_name1 = f'{args.pattern_all_range[0]}_{args.pattern_all_range[1]}' + plot_name1
-    plot_name2 = f'{args.pattern_all_range[0]}_{args.pattern_all_range[1]}' + plot_name2
-    
-    # # Save the results
+               
+    # Save the results
     enc_acc_result = {'enc_acc': enc_acc, 'enc_acc2': enc_acc2}
     with open(os.path.join(save_dir, 
                            f'enc_acc_{args.pattern_all_range[0]}_{args.pattern_all_range[1]}'), 
               'wb') as f: 
-        pickle.dump(enc_acc_result, f, protocol=4) 
-            
+        pickle.dump(enc_acc_result, f, protocol=4)
+        
+    # Average across img cond
+    enc_acc = np.mean(enc_acc, axis=0)
+    enc_acc2 = np.mean(enc_acc2, axis=0)
+    
+    # Change plot names
+    plot_name1 = f'{args.pattern_all_range[0]}_{args.pattern_all_range[1]}' + plot_name1
+    plot_name2 = f'{args.pattern_all_range[0]}_{args.pattern_all_range[1]}' + plot_name2
+    
 print(f'The shape of encoding accuracy: {enc_acc.shape}, {enc_acc2.shape}')
 
 # =============================================================================
