@@ -23,7 +23,7 @@ for fname in load_list:
 
 # Load all the data
 for idx, fpath in enumerate(data_fpaths):
-    data = np.load(os.path.join(load_dir, fname), allow_pickle=True)
+    data = np.load(fpath, allow_pickle=True)
         
     enc_acc = data['enc_acc']
     enc_acc2 = data['enc_acc2']
@@ -31,8 +31,6 @@ for idx, fpath in enumerate(data_fpaths):
     if idx == 0:
         tot_enc_acc = enc_acc
         tot_enc_acc2 = enc_acc2
-    elif idx == 1: # to be deleted
-        pass # to be deleted
     else:
         tot_enc_acc = np.concatenate([tot_enc_acc, enc_acc], axis=0)
         tot_enc_acc2 = np.concatenate([tot_enc_acc2, enc_acc2], axis=0)
