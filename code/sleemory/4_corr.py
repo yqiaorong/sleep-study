@@ -195,7 +195,7 @@ plot_name2 = f'enc acc ({args.method}) M2 ({args.num_feat} feats) z scored {args
 if args.method == 'img_cond':
     enc_acc = np.empty((num_ch, t_THINGS, t_sleemory))
     enc_acc2 = np.empty((num_ch, t_THINGS, t_sleemory))
-    for ch in tqdm(range(num_ch), desc='Correlation: img patterns'): # iterate over channels
+    for ch in tqdm(range(num_ch), desc='Correlation (img patterns)'): # iterate over channels
         for t_s in range(t_sleemory):
             for t_TH in range(t_THINGS):
                 enc_acc[ch, t_TH, t_s] = corr(pred_eeg[:, ch, t_TH], test_eeg[:, ch, t_s])[0]
@@ -207,7 +207,7 @@ elif args.method == 'pattern':
     
     enc_acc = np.empty((t_THINGS, t_sleemory))
     enc_acc2 = np.empty((t_THINGS, t_sleemory))
-    for t_s in tqdm(range(t_sleemory), desc='Correlation: EEG patterns'):
+    for t_s in tqdm(range(t_sleemory), desc='Correlation (EEG patterns)'):
         for t_TH in range(t_THINGS):
             enc_acc[t_TH, t_s] = corr(pred_eeg[args.img_cond_idx, :, t_TH],
                                         test_eeg[args.img_cond_idx, :, t_s])[0]
@@ -227,7 +227,7 @@ elif args.method == 'pattern_all': # This one is so time consuming!
     enc_acc = np.empty((num_img_cond, t_THINGS, t_sleemory))
     enc_acc2 = np.empty((num_img_cond, t_THINGS, t_sleemory))
     for idx, item in enumerate(tqdm(range(args.pattern_all_range[0], args.pattern_all_range[1]), 
-                                    desc='Coorelation: EEG patterns')):
+                                    desc='Coorelation (EEG patterns)')):
         for t_s in range(t_sleemory):
             for t_TH in range(t_THINGS):
                 enc_acc[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH], test_eeg[idx, :, t_s])[0]
@@ -241,7 +241,8 @@ elif args.method == 'pattern_all': # This one is so time consuming!
     # Save the results
     enc_acc_result = {'enc_acc': enc_acc, 'enc_acc2': enc_acc2}
     with open(os.path.join(save_dir, 
-                           f'enc_acc_{args.pattern_all_range[0]}_{args.pattern_all_range[1]}'), 
+                           f'enc_acc_{args.pattern_all_range[0]}_{args.pattern_all_range[1]}'
+                           +f'{args.num_feat}feats_z{args.z_score}'), 
               'wb') as f: 
         pickle.dump(enc_acc_result, f, protocol=4)
         
