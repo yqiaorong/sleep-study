@@ -12,7 +12,7 @@ parser.add_argument('--num_feat', default=1000, type=int)
 parser.add_argument('--z_score', default=True, type=bool)
 args = parser.parse_args()
 
-load_dir = 'output/sleemory/enc_acc/enc acc (pattern_all)'
+load_dir = f'output/sleemory/enc_acc/enc acc (pattern_all)/{args.num_feat}_feat'
 load_list = os.listdir(load_dir)
 
 # Get the list of data file paths
@@ -44,7 +44,7 @@ tot_enc_acc2 = np.mean(tot_enc_acc2, axis=0)
 # =============================================================================
 
 # Save dir
-save_dir = 'output/sleemory/enc_acc'
+save_dir = 'output/sleemory/enc_acc/enc acc (pattern_all)'
 plot_name1 = f'enc acc (pattern_all) M1 ({args.num_feat} feats) z scored True'
 plot_name2 = f'enc acc (pattern_all) M2 ({args.num_feat} feats) z scored True'
 
