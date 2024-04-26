@@ -28,9 +28,9 @@ THINGS/
 
 * 1_alexnet.py (This file extracts THINGS images features by Alexnet. )
 
-* 2_img_feat_selection.py --num_feat (This file selects the best 300 features of THINGS images features based on THINGS EEG2 training data.)
+* 2_img_feat_selection.py --num_feat --adapt_to [ /_sleemory] (This file selects the best N features of THINGS images features based on THINGS EEG2 training data.)
 
-* 3_enc_model.py --num_feat (This file trains the linear regression model on THINGS EEG2 training data. )
+* 3_enc_model.py --num_feat --adapt_to [ /_sleemory] (This file trains the linear regression model on THINGS EEG2 training data. )
 
 * 4_corr.py --test_dataset --num_feat  (THINGS_EEG2/THINGS_EEG1) (This file tests the encoding model on either THINGS EEG2 test data or THINGS EEG1 data.)
 
@@ -38,9 +38,9 @@ sleemory/
 
 * 1_alexnet.py
 
-* 2_img_feat_selection.py
+* 2_img_feat_selection.py --num_feat
 
-* 3_enc_model.py
+* 3_enc_model.py --num_feat
 
 * 4_corr.py --num_feat --z_score --method (This script calculates the encoding accuracy of sleemory which correlates the eeg of all unique imgs at every channel every time point. )
 

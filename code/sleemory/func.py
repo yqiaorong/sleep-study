@@ -1,4 +1,4 @@
-def load_full_fmaps(args, p='training'):
+def load_sleemory_full_fmaps(args):
 	import os
 	import numpy as np
 	from tqdm import tqdm
@@ -6,13 +6,12 @@ def load_full_fmaps(args, p='training'):
 	feats = []
 	final_fmaps = {}
 	# The directory of the dnn training feature maps
-	fmaps_dir = os.path.join('dataset','THINGS_EEG2','dnn_feature_maps',
+	fmaps_dir = os.path.join('dataset','temp_sleemory','dnn_feature_maps',
 							'full_feature_maps', 'Alexnet', 
-							'pretrained-'+str(args.pretrained),
-							f'{p}_images')
+							'pretrained-'+str(args.pretrained))
 	fmaps_list = os.listdir(fmaps_dir)
 	fmaps_list.sort()
-	for f, fmaps in enumerate(tqdm(fmaps_list, desc='load THINGS training images')):
+	for f, fmaps in enumerate(tqdm(fmaps_list, desc='load sleemory images')):
 		fmaps_data = np.load(os.path.join(fmaps_dir, fmaps),
 								allow_pickle=True).item()
 		all_layers = fmaps_data.keys()
@@ -23,7 +22,7 @@ def load_full_fmaps(args, p='training'):
 				feats[l].append([np.reshape(fmaps_data[dnn_layer], -1)])
 		
 	final_fmaps[args.layer_name] = np.squeeze(np.asarray(feats[l]))
-	print(f'The original {p} fmaps shape', final_fmaps[args.layer_name].shape)
+	print(f'The original fmaps shape (img, feat)', final_fmaps[args.layer_name].shape)
 
 	return final_fmaps
 

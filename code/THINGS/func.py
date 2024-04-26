@@ -50,29 +50,34 @@ def train_model_THINGS2(args):
     ### Load the training DNN feature maps ###
     # Load the training DNN feature maps directory
     dnn_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'dnn_feature_maps')
-    # Load the training DNN feature maps (16540, num_feat)
-    dnn_fmaps_train = np.load(os.path.join(dnn_train_dir, f'new_feature_maps_{args.num_feat}.npy'), 
-                            allow_pickle=True)
+    # Load the training DNN feature maps (img, num_feat)
+    dnn_fmaps_train = np.load(os.path.join(dnn_train_dir, 
+                                           f'new_feature_maps_{args.num_feat}{args.adapt_to}.npy'), 
+                              allow_pickle=True)
 
     ### Load the training EEG data ###
     # Load the THINGS2 training EEG data directory
-    eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data')
+    eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 'preprocessed_data'+args.adapt_to)
     # Iterate over THINGS2 subjects
     eeg_data_train = []
     for train_subj in tqdm(range(1,11), desc='load THINGS EEG2 subjects'):
         # Load the THINGS2 training EEG data
-        data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
+        if args.adapt_to == '':
+            data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
                     'preprocessed_eeg_training.npy'), allow_pickle=True).item()
-        # Average the training EEG data across repetitions: (16540,64,100)
+        else:
+            data = np.load(os.path.join(eeg_train_dir,'sub-'+format(train_subj,'02'),
+                    'preprocessed_eeg_training.npy'), allow_pickle=True)
+        # Average the training EEG data across repetitions: (img, ch, time)
         data = np.mean(data['preprocessed_eeg_data'], 1)
-        # Drop the stim channel: (16540, 63, 100)
+        # Drop the stim channel: (img, ch, time)
         data = np.delete(data, -1, axis=1)
-        # Reshape the data: (16540, 63 x 100)
+        # Reshape the data: (img, ch x time)
         data = np.reshape(data, (data.shape[0],-1))
         # Append individual data
         eeg_data_train.append(data)
         del data
-    # Average the training EEG data across subjects: (16540, 63 x 100)
+    # Average the training EEG data across subjects: (img, ch x time)
     eeg_data_train = np.mean(eeg_data_train, 0)
     print('eeg_data_train shape', eeg_data_train.shape)
 

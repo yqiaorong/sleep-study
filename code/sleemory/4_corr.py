@@ -29,46 +29,22 @@ for key, val in vars(args).items():
 print('')
  
 # =============================================================================
-# Load the full test feature maps
+# Load the test feature maps after feature selection
 # =============================================================================
 
-feats = []
-fmaps_test = {}
-# The directory of the dnn training feature maps
-fmaps_dir = os.path.join('dataset','temp_sleemory','dnn_feature_maps',
-                        'full_feature_maps', 'alexnet', 
-                        'pretrained-'+str(args.pretrained))
-fmaps_list = os.listdir(fmaps_dir)
-fmaps_list.sort()
-for f, fmaps in enumerate(tqdm(fmaps_list, desc='load sleemory images')):
-    fmaps_data = np.load(os.path.join(fmaps_dir, fmaps),
-                            allow_pickle=True).item()
-    all_layers = fmaps_data.keys()
-    for l, dnn_layer in enumerate(all_layers):
-        if f == 0:
-            feats.append([[np.reshape(fmaps_data[dnn_layer], -1)]])
-        else:
-            feats[l].append([np.reshape(fmaps_data[dnn_layer], -1)])
-    
-fmaps_test[args.layer_name] = np.squeeze(np.asarray(feats[l]))
-print(f'The original fmaps shape (img, feat)', fmaps_test[args.layer_name].shape)
+fmaps_path = f'dataset/temp_sleemory/dnn_feature_maps/new_feature_maps_{args.num_feat}.npy'
+best_feat_test = np.load(fmaps_path, allow_pickle=True)
 
-# =============================================================================
-# Load the feature selection model and apply feature selection to test fmaps
-# =============================================================================
-
-model_path = 'dataset/temp_sleemory'
-feat = pickle.load(open(os.path.join(model_path, 
-                                     f'feat_model_{args.num_feat}.pkl'), 'rb'))
-best_feat_test = feat.transform(fmaps_test[args.layer_name])
 print(f'The new fmaps shape (img, feat) {best_feat_test.shape}')
 
 # =============================================================================
 # Load the encoding model
 # =============================================================================
 
-reg = pickle.load(open(os.path.join(model_path, 
-                                    f'reg_model_{args.num_feat}.pkl'), 'rb'))
+enc_model_path = f'dataset/THINGS_EEG2'
+reg = pickle.load(open(os.path.join(enc_model_path, 
+                                    f'reg_model_{args.num_feat}_sleemory.pkl'), 
+                       'rb'))
 
 # =============================================================================
 # Predict EEG from fmaps

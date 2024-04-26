@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
 parser.add_argument('--num_feat', default=300, type=int)
+parser.add_argument('--adapt_to', default='', type=str) # [/_sleemory]
 args = parser.parse_args()
 
 print('')
@@ -22,8 +23,10 @@ for key, val in vars(args).items():
 # Train the encoding model 
 # =============================================================================
 
-reg = train_model_THINGS2(args)
+reg = train_model_THINGS2(args) # depend on the num_feat
 
 # Save the model
-save_dir = os.path.join('dataset','THINGS_EEG2')
-pickle.dump(reg, open(os.path.join(save_dir, f'reg_model_{args.num_feat}.pkl'), 'wb'))
+model_dir = os.path.join('dataset','THINGS_EEG2', 'model')
+pickle.dump(reg, 
+            open(os.path.join(model_dir, f'reg_model_{args.num_feat}{args.adapt_to}.pkl'), 
+                'wb'))
