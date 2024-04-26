@@ -18,6 +18,7 @@ print('Feature selection of sleemory images feature maps <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
+print('')
 
 # =============================================================================
 # Load the training feature maps
