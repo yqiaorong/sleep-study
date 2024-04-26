@@ -107,6 +107,5 @@ else:
 # Save new features
 # =============================================================================
 
-# Save new features
 np.save(os.path.join(save_dir, 'dnn_feature_maps', 
                      f'new_feature_maps_{args.num_feat}{args.adapt_to}'), best_feat) 

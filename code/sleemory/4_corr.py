@@ -41,7 +41,7 @@ print(f'The new fmaps shape (img, feat) {best_feat_test.shape}')
 # Load the encoding model
 # =============================================================================
 
-enc_model_path = f'dataset/THINGS_EEG2'
+enc_model_path = f'dataset/THINGS_EEG2/model'
 reg = pickle.load(open(os.path.join(enc_model_path, 
                                     f'reg_model_{args.num_feat}_sleemory.pkl'), 
                        'rb'))

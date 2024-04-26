@@ -29,7 +29,8 @@ fmaps = load_sleemory_full_fmaps(args)
 if args.num_feat == -1:
     best_feat = fmaps[args.layer_name]
 else:
-    feat_model_dir = os.path.join('dataset', 'THINGS_EEG2', f'feat_model_{args.num_feat}.pkl')
+    feat_model_dir = os.path.join('dataset', 'THINGS_EEG2', 'model', 
+                                  f'feat_model_{args.num_feat}_sleemory.pkl')
     with open(feat_model_dir, 'rb') as f:
         feature_selection = pickle.load(f)
         best_feat = feature_selection.transform(fmaps[args.layer_name])
