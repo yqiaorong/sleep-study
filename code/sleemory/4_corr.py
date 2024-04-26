@@ -14,8 +14,10 @@ from scipy.stats import pearsonr as corr
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
+
 parser.add_argument('--num_feat', default=1000, type=int)
 parser.add_argument('--z_score', default=True, type=bool)
+
 parser.add_argument('--method', default='img_cond', type=str) # [img_cond / pattern / pattern_all]
 parser.add_argument('--img_cond_idx', default=-1, type=int) # for [pattern]
 parser.add_argument('--pattern_all_range', default=[0, -1], nargs='+', type=int) # for [pattern_all]
