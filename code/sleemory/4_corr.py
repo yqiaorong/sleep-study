@@ -53,7 +53,7 @@ num_ch = test_eeg.shape[1]
 # Save directory
 # =============================================================================
 
-save_dir = f'output/sleemory/enc_acc/enc acc ({args.method})'
+save_dir = f'output/sleemory/enc_acc/enc acc ({args.method})/{args.num_feat}_feat'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
@@ -77,11 +77,6 @@ if args.method == 'img_cond':
     # Average the encoding accuracy across channels
     enc_acc = np.mean(enc_acc, 0)
     enc_acc2 = np.mean(enc_acc2, 0)
-    
-    # modify save dir
-    save_dir = os.path.join(save_dir, f'{args.num_feat}_feat')
-    if os.path.isdir(save_dir) == False:
-        os.makedirs(save_dir)
         
 elif args.method == 'pattern':
     
@@ -94,10 +89,6 @@ elif args.method == 'pattern':
             enc_acc2[t_TH, t_s] = corr(pred_eeg[args.img_cond_idx, :, t_TH],
                                         test_eeg2[args.img_cond_idx, :, t_s])[0]
             
-    # modify save dir
-    save_dir = os.path.join(save_dir, f'{args.num_feat}_feat')
-    if os.path.isdir(save_dir) == False:
-        os.makedirs(save_dir)
     # Change plot names
     plot_name1 = f'{args.img_cond_idx:003d}' + plot_name1
     plot_name2 = f'{args.img_cond_idx:003d}' + plot_name2
@@ -114,11 +105,6 @@ elif args.method == 'pattern_all': # This one is so time consuming!
             for t_TH in range(t_THINGS):
                 enc_acc[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH], test_eeg[idx, :, t_s])[0]
                 enc_acc2[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH], test_eeg2[idx, :, t_s])[0]
-    
-    # modify save dir
-    save_dir = os.path.join(save_dir, f'{args.num_feat}_feat')
-    if os.path.isdir(save_dir) == False:
-        os.makedirs(save_dir)
                
     # Save the results
     enc_acc_result = {'enc_acc': enc_acc, 'enc_acc2': enc_acc2}

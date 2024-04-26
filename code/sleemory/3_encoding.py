@@ -5,8 +5,6 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from func import mvnn_mean, mvnn
-from matplotlib import pyplot as plt
-from scipy.stats import pearsonr as corr
 
 # =============================================================================
 # Input arguments
@@ -143,9 +141,8 @@ for i, data in enumerate(tot_test_eeg):
 del tot_test_eeg
 
 # =============================================================================
-# Z score the data
+# Save the test eeg data
 # =============================================================================
 
-# Save the test eeg data
 save_dict = {'test_eeg': test_eeg, 'test_eeg2': test_eeg2, 'pred_eeg': pred_eeg}
 np.save(os.path.join(save_dir, f'z{args.z_score}_{args.num_feat}feat'), save_dict)
