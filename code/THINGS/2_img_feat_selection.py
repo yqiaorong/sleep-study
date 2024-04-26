@@ -47,7 +47,10 @@ else:
     
     from sklearn.feature_selection import SelectKBest, f_regression
 
-    ### Load the training THINGS EEG2 data ###
+    # =============================================================================
+    # Load the training THINGS EEG2 data
+    # =============================================================================
+    
     # Load the THINGS2 training EEG data directory
     eeg_train_dir = os.path.join('dataset', 'THINGS_EEG2', 
                                 'preprocessed_data'+args.adapt_to)
