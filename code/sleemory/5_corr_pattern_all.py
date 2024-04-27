@@ -18,8 +18,9 @@ load_list = os.listdir(load_dir)
 # Get the list of data file paths
 data_fpaths = []
 for fname in load_list:
-    if not fname.endswith('png') and f'{args.num_feat}feats_z{args.z_score}' in fname:
-        data_fpaths.append(os.path.join(load_dir, fname))
+    if not fname.endswith('png') and f'z{args.z_score}' in fname:
+        if not f'enc_acc_0-864_{args.num_feat}feats' in fname:
+            data_fpaths.append(os.path.join(load_dir, fname))
 
 # Load all the data
 for idx, fpath in enumerate(data_fpaths):
