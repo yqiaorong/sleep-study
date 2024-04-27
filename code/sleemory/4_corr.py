@@ -103,14 +103,14 @@ elif args.method == 'pattern_all': # This one is so time consuming!
                                     desc='Coorelation (EEG patterns)')):
         for t_s in range(t_sleemory):
             for t_TH in range(t_THINGS):
-                enc_acc[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH], test_eeg[idx, :, t_s])[0]
-                enc_acc2[idx, t_TH, t_s] = corr(pred_eeg[idx, :, t_TH], test_eeg2[idx, :, t_s])[0]
+                enc_acc[idx, t_TH, t_s] = corr(pred_eeg[item, :, t_TH], test_eeg[item, :, t_s])[0]
+                enc_acc2[idx, t_TH, t_s] = corr(pred_eeg[item, :, t_TH], test_eeg2[item, :, t_s])[0]
                
     # Save the results
     enc_acc_result = {'enc_acc': enc_acc, 'enc_acc2': enc_acc2}
     with open(os.path.join(save_dir, 
-                           f'enc_acc_{args.pattern_all_range[0]}_{args.pattern_all_range[1]}'
-                           +f'{args.num_feat}feats_z{args.z_score}'), 
+                           f'enc_acc_{args.pattern_all_range[0]}-{args.pattern_all_range[1]}'
+                           +f'_{args.num_feat}feats_z{args.z_score}'), 
               'wb') as f: 
         pickle.dump(enc_acc_result, f, protocol=4)
         
