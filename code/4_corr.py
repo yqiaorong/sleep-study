@@ -2,6 +2,7 @@ import os
 import pickle
 import argparse
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 from scipy.stats import pearsonr as corr
@@ -80,12 +81,14 @@ elif args.method == 'pattern':
     
     enc_acc = np.empty((t_THINGS, t_sleemory))
     enc_acc2 = np.empty((t_THINGS, t_sleemory))
-    for t_s in tqdm(range(t_sleemory), desc='Correlation (EEG patterns)'):
-        for t_TH in range(t_THINGS):
-            enc_acc[t_TH, t_s] = corr(pred_eeg[args.img_cond_idx, :, t_TH],
-                                        test_eeg[args.img_cond_idx, :, t_s])[0]
-            enc_acc2[t_TH, t_s] = corr(pred_eeg[args.img_cond_idx, :, t_TH],
-                                        test_eeg2[args.img_cond_idx, :, t_s])[0]
+            
+    for t_TH in tqdm(range(t_THINGS), desc='Correlation (EEG patterns)'):
+        TH_values = pd.Series(pred_eeg[args.img_cond_idx, :, t_TH])
+        for t_s in range(t_sleemory):
+            s_values1 = pd.Series(test_eeg[args.img_cond_idx, :, t_s])
+            s_values2 = pd.Series(test_eeg2[args.img_cond_idx, :, t_s])
+            enc_acc[t_TH, t_s] = TH_values.corr(s_values1)
+            enc_acc2[t_TH, t_s] = TH_values.corr(s_values2)
             
     # Change plot names
     plot_name1 = f'{args.img_cond_idx:003d}' + plot_name1
@@ -99,10 +102,13 @@ elif args.method == 'pattern_all': # This one is so time consuming!
     enc_acc2 = np.empty((num_img_cond, t_THINGS, t_sleemory))
     for idx, item in enumerate(tqdm(range(args.pattern_all_range[0], args.pattern_all_range[1]), 
                                     desc='Coorelation (EEG patterns)')):
-        for t_s in range(t_sleemory):
-            for t_TH in range(t_THINGS):
-                enc_acc[idx, t_TH, t_s] = corr(pred_eeg[item, :, t_TH], test_eeg[item, :, t_s])[0]
-                enc_acc2[idx, t_TH, t_s] = corr(pred_eeg[item, :, t_TH], test_eeg2[item, :, t_s])[0]
+        for t_TH in range(t_THINGS):
+            TH_values = pd.Series(pred_eeg[item, :, t_TH])
+            for t_s in range(t_sleemory):
+                s_values1 = pd.Series(test_eeg[item, :, t_s])
+                s_values2 = pd.Series(test_eeg2[item, :, t_s])
+                enc_acc[idx, t_TH, t_s] = TH_values.corr(s_values1)
+                enc_acc2[idx, t_TH, t_s] = TH_values.corr(s_values2)
                
     # Save the results
     enc_acc_result = {'enc_acc': enc_acc, 'enc_acc2': enc_acc2}
