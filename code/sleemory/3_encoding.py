@@ -84,6 +84,7 @@ image_set_list = os.listdir('dataset/temp_sleemory/image_set')
 # There is one extra fmap which should be dropped from pred eeg
 exclude_img = list(set(image_set_list)-set(unique_imgs))
 exclude_idx_in_img_set = image_set_list.index(exclude_img[0])
+print(f"The dropped img cond's idx: {exclude_idx_in_img_set}")
 pred_eeg = np.delete(pred_eeg, exclude_idx_in_img_set, axis=0)
 print("One img cond is dropped from pred eeg since it's absent in test eeg.")
 

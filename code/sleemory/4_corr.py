@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-from scipy.stats import pearsonr as corr
 
 # =============================================================================
 # Input arguments
