@@ -47,3 +47,5 @@ sleemory/
 * 5_corr_pattern_all.py --num_feat --z_score (This script calculates the averaged encoding accuracy of sleemory using method 'pattern_all'.)
 
 sleemory_localiser/
+
+* enc_corr.py --z_score
