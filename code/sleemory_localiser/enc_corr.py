@@ -123,7 +123,8 @@ for stimuli_idx in tqdm(range(num_test), desc='Iteration over stimuli'):
 avg_enc_acc = np.mean(enc_acc, axis=0)
 
 # Save data
-np.save(save_dir, enc_acc)
+np.save(os.path.join(save_dir, 'enc_acc'), enc_acc)
+del enc_acc
 
 # =============================================================================
 # Plot the correlation results
@@ -131,7 +132,7 @@ np.save(save_dir, enc_acc)
 
 # Plot all 2D results of method 1
 fig = plt.figure(figsize=(6, 5))
-im = plt.imshow(enc_acc, cmap='viridis',
+im = plt.imshow(avg_enc_acc, cmap='viridis',
 				extent=[-0.25, 1, -0.25, 1], 
                 origin='lower', aspect='auto')
 cbar = plt.colorbar(im)
