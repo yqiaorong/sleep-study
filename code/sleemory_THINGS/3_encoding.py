@@ -4,21 +4,21 @@ import pickle
 import argparse
 import numpy as np
 from tqdm import tqdm
-from func import mvnn_mean, mvnn
 
 # =============================================================================
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', default=None,       type=str)
 parser.add_argument('--pretrained', default=True,    type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
+
 parser.add_argument('--num_feat', default=1000,      type=int)
 parser.add_argument('--z_score', default=True,       type=bool)
-parser.add_argument('--dataset', default=None,       type=str)
 args = parser.parse_args()
 
 print('')
-print(f'>>> Encoding on sleemory <<<')
+print(f'>>> Encoding on sleemory based on THINGS <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -34,7 +34,7 @@ best_feat_test = np.load(fmaps_path, allow_pickle=True)
 print(f'The new fmaps shape (img, feat) {best_feat_test.shape}')
 
 # =============================================================================
-# Load the encoding model
+# Load the encoding model and make predictions
 # =============================================================================
 
 enc_model_path = f'dataset/THINGS_EEG2/model'
@@ -42,39 +42,29 @@ reg = pickle.load(open(os.path.join(enc_model_path,
                                     f'reg_model_{args.num_feat}_sleemory.pkl'), 
                        'rb'))
 
-# =============================================================================
-# Predict EEG from fmaps
-# =============================================================================
-
-# Load the test EEG data directory
-eeg_dir = os.path.join('dataset', 'sleemory_THINGS','preprocessed_data')
-data = scipy.io.loadmat(os.path.join(eeg_dir,'sleemory_localiser_dataset.mat'))
-prepr_data = data['ERP_all']
-imgs_all = data['imgs_all']
-ch_names = []
-for ch in data['channel_names'][:,0]:
-    ch_names.append(ch[0])
-times = data['time']
-# set time
-t_sleemory, t_THINGS = times.shape[1], 250
-del data
-
-# Drop the extra channel 'Fpz' and 'Fz':
-idx_Fz, idx_Fpz = ch_names.index('Fz'), ch_names.index('Fpz')
-prepr_data = np.delete(prepr_data, [idx_Fz, idx_Fpz], axis=1)
-print('Original test_eeg_data shape (img, ch, time)', prepr_data.shape)
-# set channels
-num_ch = len(ch_names)-2
-
 # Predict the EEG data 
 pred_eeg = reg.predict(best_feat_test)
-# Reshape the predicted EEG data
-pred_eeg = np.reshape(pred_eeg, (pred_eeg.shape[0], num_ch, t_THINGS))
-print('Original pred_eeg_data shape (img, ch, time)', pred_eeg.shape)
 
 # =============================================================================
 # Drop extra img cond in pred eeg
 # =============================================================================
+
+# Get img stimuli list
+raw_eeg = scipy.io.loadmat(f'dataset/{args.dataset}/preprocessed_data'+
+                            '/sleemory_localiser_dataset.mat')
+imgs_all = raw_eeg['imgs_all']
+del raw_eeg
+
+# Get number of channels and time points
+eeg_path = f'output/{args.dataset}_THINGS/test_eeg/whiten_test_eeg.npy'
+load_eeg = np.load(eeg_path, allow_pickle=True).item()
+eeg = load_eeg['test_eeg2']
+num_ch, t_sleemory = eeg.shape[1], eeg.shape[2]
+
+# Reshape the predicted EEG data
+t_THINGS = 250
+pred_eeg = np.reshape(pred_eeg, (pred_eeg.shape[0], num_ch, t_THINGS))
+print('Original pred_eeg_data shape (img, ch, time)', pred_eeg.shape)
 
 # Find indices in A that match the first element of B
 unique_imgs = np.unique(imgs_all)
@@ -97,50 +87,14 @@ for i, j in zip(unique_imgs, image_set_list[1:]):
         print('The order of img is unmatched')
         break
     
+
+# =============================================================================
+# Save the predict eeg data
+# =============================================================================
+
 # Create the saving directory
-save_dir = f'output/{args.dataset}/test_eeg'
+save_dir = f'output/{args.dataset}_THINGS/test_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
     
-# =============================================================================
-# Categorize the preprocessed data
-# =============================================================================
-
-# Sort the test eeg data
-test_eeg = np.empty((len(unique_imgs), num_ch, t_sleemory)) # storing mean EEG for each img
-tot_test_eeg = [] # storing all EEG for each img
-# Iterate over images
-for idx, img in enumerate(tqdm(unique_imgs, desc='Average test eeg across unique images')):
-    img_indices = np.where(imgs_all == img)[0]
-    # select corresponding prepr data
-    select_data = prepr_data[img_indices]
-    # Append data
-    tot_test_eeg.append(select_data)
-    
-    # Average across the same images
-    select_data = np.mean(select_data, 0)
-    test_eeg[idx] = select_data
-
-# =============================================================================
-# Z score the data
-# =============================================================================
-
-if args.z_score == True:
-    test_eeg = mvnn_mean(test_eeg)
-    tot_test_eeg = mvnn(tot_test_eeg)
-else:
-    pass
-
-# Average z scored total test eeg data
-test_eeg2 = np.empty(test_eeg.shape)
-for i, data in enumerate(tot_test_eeg):
-    new_data = np.mean(data, axis=0)
-    test_eeg2[i] = new_data
-del tot_test_eeg
-
-# =============================================================================
-# Save the test eeg data
-# =============================================================================
-
-save_dict = {'test_eeg': test_eeg, 'test_eeg2': test_eeg2, 'pred_eeg': pred_eeg}
-np.save(os.path.join(save_dir, f'z{args.z_score}_{args.num_feat}feat'), save_dict)
+np.save(os.path.join(save_dir, f'z{args.z_score}_{args.num_feat}feat_pred_eeg'), pred_eeg)
