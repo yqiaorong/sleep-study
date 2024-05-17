@@ -13,6 +13,7 @@ from sklearn.linear_model import LinearRegression
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--z_score', default=True, type=bool)
+parser.add_argument('--num_feat', default=-1, type=str)
 args = parser.parse_args()
 
 print('')
@@ -27,7 +28,7 @@ print('')
 # =============================================================================
 
 # Load whitened eeg data
-eeg_path = f'output/sleemory/test_eeg/z{args.z_score}_-1feat.npy'
+eeg_path = f'output/sleemory/test_eeg/z{args.z_score}_{args.num_feat}feat.npy'
 load_eeg = np.load(eeg_path, allow_pickle=True).item()
 eeg = load_eeg['test_eeg2']
 
@@ -41,7 +42,7 @@ eeg = eeg.reshape(eeg.shape[0], -1)
 print('EEG data shape (img, ch x time)', eeg.shape)
 
 # Load fmaps
-fmaps_path = f'dataset/temp_sleemory/dnn_feature_maps/new_feature_maps_-1.npy'
+fmaps_path = f'dataset/temp_sleemory/dnn_feature_maps/new_feature_maps_{args.num_feat}.npy'
 fmaps = np.load(fmaps_path, allow_pickle=True)
 print(f'The initial fmaps shape (img, feat) {fmaps.shape}')
 
@@ -91,7 +92,7 @@ if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
 # Train the encoding model
-if os.path.isdir(os.path.join(save_dir), 'reg_model.pkl') == False:
+if os.path.isdir(os.path.join(save_dir, 'reg_model.pkl')) == False:
     reg = LinearRegression().fit(train_fmaps, train_eeg)
     pickle.dump(reg, open(os.path.join(save_dir, 'reg_model.pkl'), 'wb'))
 else:
