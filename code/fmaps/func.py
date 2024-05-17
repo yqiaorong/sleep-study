@@ -6,7 +6,7 @@ def load_sleemory_full_fmaps(args):
 	feats = []
 	final_fmaps = {}
 	# The directory of the dnn training feature maps
-	fmaps_dir = os.path.join('dataset','temp_sleemory','dnn_feature_maps',
+	fmaps_dir = os.path.join('dataset',args.dataset,'dnn_feature_maps',
 							'full_feature_maps', 'Alexnet', 
 							'pretrained-'+str(args.pretrained))
 	fmaps_list = os.listdir(fmaps_dir)

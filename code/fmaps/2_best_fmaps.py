@@ -2,6 +2,7 @@ import os
 import pickle
 import argparse
 import numpy as np
+import scipy
 from func import load_sleemory_full_fmaps
 
 # =============================================================================
@@ -10,7 +11,8 @@ from func import load_sleemory_full_fmaps
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
-parser.add_argument('--num_feat', default=300, type=int)
+parser.add_argument('--num_feat', default=1000, type=int)
+parser.add_argument('--dataset', default=None, type=str)
 args = parser.parse_args()
 
 print('')
@@ -43,8 +45,10 @@ del fmaps
 # Save new features
 # =============================================================================
 
-save_dir = os.path.join('dataset','temp_sleemory')
+save_dir = os.path.join('dataset', args.dataset)
 
 # Save new features
 np.save(os.path.join(save_dir, 'dnn_feature_maps', 
                      f'new_feature_maps_{args.num_feat}'), best_feat) 
+scipy.io.savemat(os.path.join(save_dir, 'dnn_feature_maps', 
+                     f'new_feature_maps_{args.num_feat}.mat'), best_feat) 

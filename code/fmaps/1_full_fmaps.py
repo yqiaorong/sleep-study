@@ -24,6 +24,7 @@ from PIL import Image
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
+parser.add_argument('--dataset', default=None, type=str)
 args = parser.parse_args()
 
 print('')
@@ -80,7 +81,7 @@ centre_crop = trn.Compose([
 # =============================================================================
 
 # The main image directory
-img_set_dir = os.path.join('dataset','temp_sleemory','image_set')
+img_set_dir = os.path.join('dataset', args.dataset,'image_set')
 image_list = []
 for root, _, files in os.walk(img_set_dir):
 	for file in files:
@@ -89,7 +90,7 @@ for root, _, files in os.walk(img_set_dir):
 image_list.sort()
 
 # Create the saving directory if not existing
-save_dir = os.path.join('dataset','temp_sleemory','dnn_feature_maps',
+save_dir = os.path.join('dataset', args.dataset, 'dnn_feature_maps',
 						'full_feature_maps','alexnet',
 						'pretrained-'+str(args.pretrained))
 if os.path.isdir(save_dir) == False:

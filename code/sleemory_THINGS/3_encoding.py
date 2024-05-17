@@ -10,10 +10,11 @@ from func import mvnn_mean, mvnn
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--pretrained', default=True, type=bool)
+parser.add_argument('--pretrained', default=True,    type=bool)
 parser.add_argument('--layer_name', default='conv5', type=str)
-parser.add_argument('--num_feat', default=1000, type=int)
-parser.add_argument('--z_score', default=True, type=bool)
+parser.add_argument('--num_feat', default=1000,      type=int)
+parser.add_argument('--z_score', default=True,       type=bool)
+parser.add_argument('--dataset', default=None,       type=str)
 args = parser.parse_args()
 
 print('')
@@ -27,7 +28,7 @@ print('')
 # Load the test feature maps after feature selection
 # =============================================================================
 
-fmaps_path = f'dataset/temp_sleemory/dnn_feature_maps/new_feature_maps_{args.num_feat}.npy'
+fmaps_path = f'dataset/{args.dataset}/dnn_feature_maps/new_feature_maps_{args.num_feat}.npy'
 best_feat_test = np.load(fmaps_path, allow_pickle=True)
 
 print(f'The new fmaps shape (img, feat) {best_feat_test.shape}')
@@ -46,7 +47,7 @@ reg = pickle.load(open(os.path.join(enc_model_path,
 # =============================================================================
 
 # Load the test EEG data directory
-eeg_dir = os.path.join('dataset', 'temp_sleemory', 'preprocessed_data')
+eeg_dir = os.path.join('dataset', 'sleemory_THINGS','preprocessed_data')
 data = scipy.io.loadmat(os.path.join(eeg_dir,'sleemory_localiser_dataset.mat'))
 prepr_data = data['ERP_all']
 imgs_all = data['imgs_all']
@@ -79,7 +80,7 @@ print('Original pred_eeg_data shape (img, ch, time)', pred_eeg.shape)
 unique_imgs = np.unique(imgs_all)
 unique_imgs = [item for img in unique_imgs for item in img]
 
-image_set_list = os.listdir('dataset/temp_sleemory/image_set')
+image_set_list = os.listdir(f'dataset/{args.dataset}/image_set')
 
 # There is one extra fmap which should be dropped from pred eeg
 exclude_img = list(set(image_set_list)-set(unique_imgs))
@@ -96,12 +97,8 @@ for i, j in zip(unique_imgs, image_set_list[1:]):
         print('The order of img is unmatched')
         break
     
-# =============================================================================
-# Sort test EEG data
-# =============================================================================
-
 # Create the saving directory
-save_dir = f'output/sleemory/test_eeg'
+save_dir = f'output/{args.dataset}/test_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
     

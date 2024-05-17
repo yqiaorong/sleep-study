@@ -12,8 +12,9 @@ from sklearn.linear_model import LinearRegression
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--z_score', default=True, type=bool)
-parser.add_argument('--num_feat', default=-1, type=str)
+parser.add_argument('--z_score', default=True,  type=bool)
+parser.add_argument('--num_feat', default=1000, type=str)
+parser.add_argument('--dataset', default=None,  type=str)
 args = parser.parse_args()
 
 print('')
@@ -28,7 +29,7 @@ print('')
 # =============================================================================
 
 # Load whitened eeg data
-eeg_path = f'output/sleemory/test_eeg/z{args.z_score}_{args.num_feat}feat.npy'
+eeg_path = f'output/{args.dataset}/test_eeg/whiten_test_eeg.npy'
 load_eeg = np.load(eeg_path, allow_pickle=True).item()
 eeg = load_eeg['test_eeg2']
 
@@ -42,7 +43,7 @@ eeg = eeg.reshape(eeg.shape[0], -1)
 print('EEG data shape (img, ch x time)', eeg.shape)
 
 # Load fmaps
-fmaps_path = f'dataset/temp_sleemory/dnn_feature_maps/new_feature_maps_{args.num_feat}.npy'
+fmaps_path = f'dataset/{args.dataset}/dnn_feature_maps/new_feature_maps_{args.num_feat}.npy'
 fmaps = np.load(fmaps_path, allow_pickle=True)
 print(f'The initial fmaps shape (img, feat) {fmaps.shape}')
 
@@ -87,7 +88,7 @@ del fmaps
 # =============================================================================
 
 # Save directory
-save_dir = f'output/sleemory_localiser'
+save_dir = f'output/{args.dataset}'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
