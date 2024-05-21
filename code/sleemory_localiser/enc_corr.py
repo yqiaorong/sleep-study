@@ -13,7 +13,7 @@ from sklearn.linear_model import LinearRegression
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default='sleemory_localiser',  type=str)
+parser.add_argument('--dataset', default='sleemory_localiser', type=str)
 parser.add_argument('--z_score', default=True,  type=bool)
 parser.add_argument('--num_feat', default=1000, type=str)
 parser.add_argument('--layer_name', default='conv5', type=str)
@@ -47,9 +47,7 @@ print('EEG data shape (img, ch x time)', eeg.shape)
 # Load fmaps
 fmaps_path = f'dataset/{args.dataset}/dnn_feature_maps/best_fmaps/new_feature_maps_{args.num_feat}.npy'
 fmaps = np.load(fmaps_path, allow_pickle=True).item()
-for key, value in fmaps.items():
-    print(f'The layer {key} has fmaps shape (img, feat) {fmaps[key].shape}')
-print('')
+print(f'The layer {args.layer_name} has fmaps shape (img, feat) {fmaps[args.layer_name].shape}')
 
 # =============================================================================
 # Split the data
@@ -90,8 +88,6 @@ del fmaps
 save_dir = f'output/{args.dataset}'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
-
-
 
 # Train the encoding model
 reg_dir = f'dataset/{args.dataset}/model/reg_model'
@@ -137,7 +133,7 @@ if os.path.isdir(enc_dir) == False:
 enc_acc = np.empty((num_test, num_time, num_time))
             
 # Correlation across stimuli
-for stimuli_idx in tqdm(range(num_test), desc='Iteration over stimuli'):
+for stimuli_idx in tqdm(range(num_test), desc='Iteration over image'):
     for t_test in range(num_time):
         test_val = pd.Series(test_eeg[stimuli_idx, :, t_test])
         for t_pred in range(num_time):
@@ -148,7 +144,7 @@ for stimuli_idx in tqdm(range(num_test), desc='Iteration over stimuli'):
 avg_enc_acc = np.mean(enc_acc, axis=0)
 
 # Save data
-np.save(os.path.join(enc_dir, f'{args.layer}_enc_acc'), enc_acc)
+np.save(os.path.join(enc_dir, f'{args.layer_name}_enc_acc'), enc_acc)
 del enc_acc
 
 # =============================================================================
@@ -170,6 +166,6 @@ plt.xlim([-0.25, 1])
 plt.ylim([-0.25, 1])
 plt.xlabel('Test EEG time / s')
 plt.ylabel('Pred EEG time / s')
-plt.title('Encoding accuracies')
+plt.title(f'Encoding accuracies of layer {args.layer_name}')
 fig.tight_layout()
-plt.savefig(os.path.join(enc_dir, f'{args.layer}_enc_acc'))
+plt.savefig(os.path.join(enc_dir, f'{args.layer_name}_enc_acc'))
