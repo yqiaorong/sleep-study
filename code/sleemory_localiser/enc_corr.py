@@ -145,7 +145,8 @@ avg_enc_acc = np.mean(enc_acc, axis=0)
 
 # Save data
 np.save(os.path.join(enc_dir, f'{args.layer_name}_enc_acc'), enc_acc)
-scipy.io.savemat(os.path.join(enc_dir, f'{args.layer_name}_enc_acc.mat'), enc_acc) 
+scipy.io.savemat(os.path.join(enc_dir, f'{args.layer_name}_enc_acc.mat'), 
+                 {'enc_acc': enc_acc}) 
 del enc_acc
 
 # =============================================================================
