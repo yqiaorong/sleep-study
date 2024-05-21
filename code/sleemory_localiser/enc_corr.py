@@ -31,7 +31,7 @@ print('')
 # =============================================================================
 
 # Load whitened eeg data
-eeg_path = f'output/{args.dataset}/test_eeg/whiten_test_eeg.npy'
+eeg_path = f'output/{args.dataset}/whiten_eeg/whiten_test_eeg.npy'
 load_eeg = np.load(eeg_path, allow_pickle=True).item()
 eeg = load_eeg['test_eeg2']
 
@@ -120,13 +120,13 @@ print('Predicted EEG data shape (img, ch x time)', pred_eeg.shape)
 save_eeg = {'train_eeg': train_eeg, 'test_eeg': test_eeg, 'pred_eeg': pred_eeg}
 
 np.save(os.path.join(save_data_dir, f'{args.layer_name}_eeg'), save_eeg)
-scipy.io.savemat(os.path.join(save_data_dir, f'{args.layer_name}_eeg,mat'), save_eeg) 
+scipy.io.savemat(os.path.join(save_data_dir, f'{args.layer_name}_eeg.mat'), save_eeg) 
 
 # =============================================================================
 # Correlation
 # =============================================================================
 
-enc_dir = os.path.join(save_dir, 'enc_acc')
+enc_dir = os.path.join(save_dir, f'enc_acc/{args.num_feat}feats')
 if os.path.isdir(enc_dir) == False:
     os.makedirs(enc_dir)
     
@@ -145,6 +145,7 @@ avg_enc_acc = np.mean(enc_acc, axis=0)
 
 # Save data
 np.save(os.path.join(enc_dir, f'{args.layer_name}_enc_acc'), enc_acc)
+scipy.io.savemat(os.path.join(enc_dir, f'{args.layer_name}_enc_acc.mat'), enc_acc) 
 del enc_acc
 
 # =============================================================================
