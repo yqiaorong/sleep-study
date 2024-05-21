@@ -104,27 +104,27 @@ if os.path.isdir(os.path.join(reg_dir, f'{args.layer_name}_reg_model.pkl')) == F
 else:
     reg = pickle.load(open(os.path.join(reg_dir, f'{args.layer_name}_reg_model.pkl'), 'rb'))
 
-
-
-# Predict EEG
 pred_eeg = reg.predict(test_fmaps)
-print('Predicted EEG data shape (img, ch x time)', pred_eeg.shape)
+
+# =============================================================================
+# Svae predicted EEG
+# =============================================================================
+
+save_data_dir = os.path.join(save_dir, 'test_pred_eeg', f'{args.num_feat}feats')
+if os.path.isdir(save_data_dir) == False:
+	os.makedirs(save_data_dir)
 
 # Reshape the test data and the predicted data
 train_eeg = train_eeg.reshape(num_train, num_ch, num_time)
 pred_eeg = pred_eeg.reshape(num_test, num_ch, num_time)
 test_eeg = test_eeg.reshape(num_test, num_ch, num_time)
+print('Predicted EEG data shape (img, ch x time)', pred_eeg.shape)
 
 # Save the predicted and real eeg data
 save_eeg = {'train_eeg': train_eeg, 'test_eeg': test_eeg, 'pred_eeg': pred_eeg}
-save_data_dir = os.path.join(save_dir, 'test_pred_eeg')
-if os.path.isdir(save_data_dir) == False:
-	os.makedirs(save_data_dir)
- 
+
 np.save(os.path.join(save_data_dir, f'{args.layer_name}_eeg'), save_eeg)
 scipy.io.savemat(os.path.join(save_data_dir, f'{args.layer_name}_eeg,mat'), save_eeg) 
-
-
 
 # =============================================================================
 # Correlation
