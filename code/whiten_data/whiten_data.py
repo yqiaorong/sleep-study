@@ -93,7 +93,7 @@ del tot_test_eeg
 # =============================================================================
 
 # Create the saving directory
-save_dir = f'output/{args.dataset}{args.adapt_to}/test_eeg'
+save_dir = f'output/{args.dataset}{args.adapt_to}/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
     

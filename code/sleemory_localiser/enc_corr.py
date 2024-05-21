@@ -1,5 +1,6 @@
 import os
 import pickle
+import scipy
 import argparse
 import numpy as np
 import pandas as pd
@@ -12,9 +13,10 @@ from sklearn.linear_model import LinearRegression
 # =============================================================================
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', default='sleemory_localiser',  type=str)
 parser.add_argument('--z_score', default=True,  type=bool)
 parser.add_argument('--num_feat', default=1000, type=str)
-parser.add_argument('--dataset', default=None,  type=str)
+parser.add_argument('--layer_name', default='conv5', type=str)
 args = parser.parse_args()
 
 print('')
@@ -43,14 +45,11 @@ eeg = eeg.reshape(eeg.shape[0], -1)
 print('EEG data shape (img, ch x time)', eeg.shape)
 
 # Load fmaps
-fmaps_path = f'dataset/{args.dataset}/dnn_feature_maps/new_feature_maps_{args.num_feat}.npy'
-fmaps = np.load(fmaps_path, allow_pickle=True)
-print(f'The initial fmaps shape (img, feat) {fmaps.shape}')
-
-# Drop the extra fmaps
-drop_idx = 0
-fmaps = np.delete(fmaps, drop_idx, axis=0)
-print(f'The final fmaps shape (img, feat) {fmaps.shape}')
+fmaps_path = f'dataset/{args.dataset}/dnn_feature_maps/best_fmaps/new_feature_maps_{args.num_feat}.npy'
+fmaps = np.load(fmaps_path, allow_pickle=True).item()
+for key, value in fmaps.items():
+    print(f'The layer {key} has fmaps shape (img, feat) {fmaps[key].shape}')
+print('')
 
 # =============================================================================
 # Split the data
@@ -78,7 +77,7 @@ print(f'The test partition eeg data shape: {test_eeg.shape}')
 del eeg
 
 # Test data
-train_fmaps, test_fmaps = fmaps[idxs_train], fmaps[idxs_test]
+train_fmaps, test_fmaps = fmaps[args.layer_name][idxs_train], fmaps[args.layer_name][idxs_test]
 print(f'The training partition fmaps shape: {train_fmaps.shape}')
 print(f'The test partition fmaps shape: {test_fmaps.shape}')
 del fmaps
@@ -92,25 +91,49 @@ save_dir = f'output/{args.dataset}'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
+
+
 # Train the encoding model
-if os.path.isdir(os.path.join(save_dir, 'reg_model.pkl')) == False:
+reg_dir = f'dataset/{args.dataset}/model/reg_model'
+if os.path.isdir(reg_dir) == False:
+    os.makedirs(reg_dir)
+        
+if os.path.isdir(os.path.join(reg_dir, f'{args.layer_name}_reg_model.pkl')) == False:
     reg = LinearRegression().fit(train_fmaps, train_eeg)
-    pickle.dump(reg, open(os.path.join(save_dir, 'reg_model.pkl'), 'wb'))
+    pickle.dump(reg, open(os.path.join(reg_dir, f'{args.layer_name}_reg_model.pkl'), 'wb'))
 else:
-    reg = pickle.load(open(os.path.join(save_dir, 'reg_model.pkl'), 'rb'))
+    reg = pickle.load(open(os.path.join(reg_dir, f'{args.layer_name}_reg_model.pkl'), 'rb'))
+
+
 
 # Predict EEG
 pred_eeg = reg.predict(test_fmaps)
 print('Predicted EEG data shape (img, ch x time)', pred_eeg.shape)
 
 # Reshape the test data and the predicted data
+train_eeg = train_eeg.reshape(num_train, num_ch, num_time)
 pred_eeg = pred_eeg.reshape(num_test, num_ch, num_time)
 test_eeg = test_eeg.reshape(num_test, num_ch, num_time)
+
+# Save the predicted and real eeg data
+save_eeg = {'train_eeg': train_eeg, 'test_eeg': test_eeg, 'pred_eeg': pred_eeg}
+save_data_dir = os.path.join(save_dir, 'test_pred_eeg')
+if os.path.isdir(save_data_dir) == False:
+	os.makedirs(save_data_dir)
+ 
+np.save(os.path.join(save_data_dir, f'{args.layer_name}_eeg'), save_eeg)
+scipy.io.savemat(os.path.join(save_data_dir, f'{args.layer_name}_eeg,mat'), save_eeg) 
+
+
 
 # =============================================================================
 # Correlation
 # =============================================================================
 
+enc_dir = os.path.join(save_dir, 'enc_acc')
+if os.path.isdir(enc_dir) == False:
+    os.makedirs(enc_dir)
+    
 enc_acc = np.empty((num_test, num_time, num_time))
             
 # Correlation across stimuli
@@ -125,7 +148,7 @@ for stimuli_idx in tqdm(range(num_test), desc='Iteration over stimuli'):
 avg_enc_acc = np.mean(enc_acc, axis=0)
 
 # Save data
-np.save(os.path.join(save_dir, 'enc_acc'), enc_acc)
+np.save(os.path.join(enc_dir, f'{args.layer}_enc_acc'), enc_acc)
 del enc_acc
 
 # =============================================================================
@@ -149,4 +172,4 @@ plt.xlabel('Test EEG time / s')
 plt.ylabel('Pred EEG time / s')
 plt.title('Encoding accuracies')
 fig.tight_layout()
-plt.savefig(os.path.join(save_dir, 'enc_acc'))
+plt.savefig(os.path.join(enc_dir, f'{args.layer}_enc_acc'))

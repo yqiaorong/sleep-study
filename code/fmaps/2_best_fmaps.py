@@ -72,6 +72,7 @@ else:
             pickle.dump(feature_selection, 
                         open(os.path.join(model_dir, f'{layer}_feat_model_{args.num_feat}.pkl'), 
                             'wb'))
+            del feature_selection
             
         elif args.dataset == 'sleemory_retrieval':
             # Apply the model
