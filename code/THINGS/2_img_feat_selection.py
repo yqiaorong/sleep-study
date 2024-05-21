@@ -10,10 +10,10 @@ from func import load_full_fmaps
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--pretrained', default=True, type=bool)
-parser.add_argument('--layer_name', default='conv5', type=str)
-parser.add_argument('--num_feat', default=300, type=int)
-parser.add_argument('--adapt_to', default='', type=str) # [/_sleemory]
+parser.add_argument('--pretrained', default=True,    type=bool)
+# parser.add_argument('--layer_name', default='conv5', type=str)
+parser.add_argument('--num_feat',   default=1000,    type=int)
+parser.add_argument('--adapt_to',   default='',      type=str) # [/_sleemory]
 args = parser.parse_args()
 
 print('')
@@ -42,8 +42,9 @@ save_dir = os.path.join('dataset','THINGS_EEG2')
 # =============================================================================
 
 if args.num_feat == -1:
-    best_feat = fmaps_train[args.layer_name]
+    best_feat = fmaps_train
 else:
+    best_feat = {}
     
     from sklearn.feature_selection import SelectKBest, f_regression
 
@@ -83,25 +84,28 @@ else:
     # Average the training EEG data across subjects: (img,)
     eeg_data_train = np.mean(eeg_data_train, 0)
 
+   
+    # layers names
+    all_layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8']
     # Apply feature selection
-    feature_selection = SelectKBest(f_regression, 
-                                        k=args.num_feat).fit(fmaps_train[args.layer_name], 
+    for layer in all_layers:
+        feature_selection = SelectKBest(f_regression, 
+                                        k=args.num_feat).fit(fmaps_train[layer], 
                                         eeg_data_train)
-    best_feat = feature_selection.transform(fmaps_train[args.layer_name])
+        best_feat[layer] = feature_selection.transform(fmaps_train[layer])
 
-    print(f'The new training fmaps shape {best_feat.shape}')
-    del fmaps_train
+        print(f'The new training fmaps of layer {layer} has shape {best_feat[layer].shape}')
 
-    # =============================================================================
-    # Save the feature selection model
-    # =============================================================================
-    
-    model_dir = os.path.join(save_dir, 'model')
-    if os.path.isdir(model_dir) == False:
-        os.makedirs(model_dir)
-    pickle.dump(feature_selection, 
-                open(os.path.join(model_dir, f'feat_model_{args.num_feat}{args.adapt_to}.pkl'), 
-                     'wb'))
+        # =============================================================================
+        # Save the feature selection model
+        # =============================================================================
+        
+        model_dir = os.path.join(save_dir, 'model', 'best_fmaps_model')
+        if os.path.isdir(model_dir) == False:
+            os.makedirs(model_dir)
+        pickle.dump(feature_selection, 
+                    open(os.path.join(model_dir, f'{layer}_feat_model_{args.num_feat}{args.adapt_to}.pkl'), 
+                        'wb'))
 
 # =============================================================================
 # Save new features

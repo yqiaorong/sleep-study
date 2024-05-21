@@ -23,7 +23,6 @@ from PIL import Image
 # =============================================================================
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
-parser.add_argument('--layer_name', default='conv5', type=str)
 parser.add_argument('--dataset', default=None, type=str)
 args = parser.parse_args()
 
@@ -45,22 +44,34 @@ torch.use_deterministic_algorithms(True)
 # Lists of AlexNet convolutional and fully connected layers
 conv_layers = ['conv1', 'ReLU1', 'maxpool1', 'conv2', 'ReLU2', 'maxpool2',
 	'conv3', 'ReLU3', 'conv4', 'ReLU4', 'conv5', 'ReLU5', 'maxpool5']
+fully_connected_layers = ['Dropout6', 'fc6', 'ReLU6', 'Dropout7', 'fc7',
+	'ReLU7', 'fc8']
 
 class AlexNet(nn.Module):
-    def __init__(self, weights='IMAGENET1K_V1'):
-        """Select the desired layers and create the model."""
-        super(AlexNet, self).__init__()
-        self.feat_list = [args.layer_name]
-        self.alex_feats = models.alexnet(weights=weights).features
+	def __init__(self, weights='IMAGENET1K_V1'):
+		"""Select the desired layers and create the model."""
+		super(AlexNet, self).__init__()
+		self.select_cov = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5']
+		self.select_fully_connected = ['fc6' , 'fc7', 'fc8']
+		self.feat_list = self.select_cov + self.select_fully_connected
+		self.alex_feats = models.alexnet(weights=weights).features
+		self.alex_classifier = models.alexnet(weights=weights).classifier
+		self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
 
-    def forward(self, x):
-        """Extract the feature maps."""
-        features = []
-        for name, layer in self.alex_feats._modules.items():
-            x = layer(x)
-            if conv_layers[int(name)] in self.feat_list:
-                features.append(x)
-        return features
+	def forward(self, x):
+		"""Extract the feature maps."""
+		features = []
+		for name, layer in self.alex_feats._modules.items():
+			x = layer(x)
+			if conv_layers[int(name)] in self.feat_list:
+				features.append(x)
+		x = self.avgpool(x)
+		x = x.view(x.size(0), -1)
+		for name, layer in self.alex_classifier._modules.items():
+			x = layer(x)
+			if fully_connected_layers[int(name)] in self.feat_list:
+				features.append(x)
+		return features
     
 model = AlexNet()
 if torch.cuda.is_available():
@@ -81,7 +92,7 @@ centre_crop = trn.Compose([
 # =============================================================================
 
 # The main image directory
-img_set_dir = os.path.join('dataset', args.dataset,'image_set')
+img_set_dir = os.path.join('dataset', args.dataset, 'image_set')
 image_list = []
 for root, _, files in os.walk(img_set_dir):
 	for file in files:
