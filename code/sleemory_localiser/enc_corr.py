@@ -93,7 +93,7 @@ if os.path.isdir(save_dir) == False:
 reg_dir = f'dataset/{args.dataset}/model/reg_model'
 if os.path.isdir(reg_dir) == False:
     os.makedirs(reg_dir)
-        
+print(train_fmaps.shape, train_eeg.shape)
 if os.path.isdir(os.path.join(reg_dir, f'{args.layer_name}_reg_model.pkl')) == False:
     reg = LinearRegression().fit(train_fmaps, train_eeg)
     pickle.dump(reg, open(os.path.join(reg_dir, f'{args.layer_name}_reg_model.pkl'), 'wb'))

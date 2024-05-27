@@ -35,7 +35,7 @@ for i in range(len(eeg_localiser)):
     
 # Check encoding accuracy 
 enc_data = []
-selected_layers = ['fc7', 'conv5']
+selected_layers = ['fc8', 'fc6']
 for l in selected_layers:
     data = np.load(f'output/sleemory_localiser/enc_acc/1000feats/{l}_enc_acc.npy', 
                allow_pickle=True)
