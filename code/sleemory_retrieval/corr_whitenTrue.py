@@ -3,20 +3,39 @@ import numpy as np
 from tqdm import tqdm
 import pandas as pd
 from matplotlib import pyplot as plt
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--num_feat', default=1000, type=str)
+parser.add_argument('--sub', default=2, type=int)
+parser.add_argument('--layer', default='conv5', type=str)
+args = parser.parse_args()
+
+print('')
+print(f'>>> Correlation of sleemory retrieval (whiten True) <<<')
+print('\nInput arguments:')
+for key, val in vars(args).items():
+	print('{:16} {}'.format(key, val))
+print('')
+
+
 
 whiten = True
-sub = 2
+sub = args.sub
+num_feat = args.num_feat
+layer = args.layer
 
-data = np.load(f'output/sleemory_retrieval/whiten_eeg/whiten_test_eeg_sub-{sub:3d}.npy', allow_pickle=True).item()
+
+
+data = np.load(f'output/sleemory_retrieval/whiten_eeg/whiten_test_eeg_sub-{sub:03d}.npy', allow_pickle=True).item()
 eegs = data['whitened_data']
 imgs_names = data['imgs_all']
+del data
 
 
 # Load predicted test eeg from the encoding model
-num_feat = 1000
 pred_eeg_dir = f'output/sleemory_retrieval/test_pred_eeg/pred_eeg_with_{num_feat}feats.npy'
 pred_eeg_all = np.load(pred_eeg_dir, allow_pickle=True).item() # dict of 8 layers
-layer = 'conv5'
 pred_eeg = pred_eeg_all[layer]
 pred_time = pred_eeg.shape[2]
 
