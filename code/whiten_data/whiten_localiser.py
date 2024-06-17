@@ -9,7 +9,6 @@ import argparse
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default=None, type=str)
 parser.add_argument('--adapt_to', default=None, type=str)
 args = parser.parse_args()
 
@@ -25,8 +24,7 @@ print('')
 # =============================================================================
 
 # Load the test EEG data directory
-
-eeg_dir = os.path.join('dataset', args.dataset, 'preprocessed_data')
+eeg_dir = 'dataset/sleemory_localiser/preprocessed_data'
 data = scipy.io.loadmat(os.path.join(eeg_dir,'sleemory_localiser_dataset.mat'))
 prepr_data = data['ERP_all']
 imgs_all = data['imgs_all']
@@ -93,7 +91,7 @@ del tot_test_eeg
 # =============================================================================
 
 # Create the saving directory
-save_dir = f'output/{args.dataset}{args.adapt_to}/whiten_eeg'
+save_dir = f'output/sleemory_localiser{args.adapt_to}/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
     
