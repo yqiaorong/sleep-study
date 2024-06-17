@@ -46,13 +46,13 @@ for ses in range(2):
         if os.path.isdir(save_dir) == False:
             os.makedirs(save_dir)
             
-        np.save(os.path.join(save_dir, f'{layer}_enc_acc'), enc_acc)
+        np.save(os.path.join(save_dir, f'{name}_{layer}_enc_acc'), enc_acc)
         
         # Average the results over stimuli
         avg_enc_acc = np.mean(enc_acc, axis=0)
         
-        # Plot all 2D results of method 1
-        fig = plt.figure(figsize=(6, 5))
+        # Plot all 2D results of ethod 1
+        fig = plt.figure(figsize=(10, 5))
         im = plt.imshow(avg_enc_acc, cmap='viridis',
         				extent=[0, 2.5, -0.25, 1], 
                         origin='lower', aspect='auto')
@@ -68,4 +68,4 @@ for ses in range(2):
         plt.ylabel('Pred EEG time / s')
         plt.title('Encoding accuracies')
         fig.tight_layout()
-        plt.savefig(os.path.join(save_dir, f'{layer}_enc_acc'))     
+        plt.savefig(os.path.join(save_dir, f'{name}_{layer}_enc_acc'))     
