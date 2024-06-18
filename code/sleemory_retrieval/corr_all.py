@@ -5,4 +5,3 @@ for sub in range(4, 26):
         pass
     else:
         os.system(f'python code/sleemory_retrieval/corr_whitenFalse.py --sub {sub}')
-        os.system(f'python code/sleemory_retrieval/corr_whitenTrue.py --sub {sub}')
