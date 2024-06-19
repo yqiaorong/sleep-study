@@ -3,7 +3,7 @@ import os
 from func import plot2D
 
 # Input
-sub_list = [9]
+sub_list = [3]
 ses_list = [0, 1]
 num_feat = 1000
 layer = 'conv5'
@@ -24,7 +24,7 @@ for sub in sub_list:
                 data = np.mean(data, axis=0)
                 avg_data.append(data)
         avg_data = np.mean(avg_data, axis=0)
-
+        print(avg_data.shape)
         # Plot the data
         save_dir = f'output/sleemory_retrieval/enc_acc/sub-{sub:03d}/ses-{ses}/{num_feat}feats_whiten{whiten}'
         if os.path.isdir(save_dir) == False:

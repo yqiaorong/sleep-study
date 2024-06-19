@@ -9,9 +9,6 @@ def plot2D(data, size, yrange, xrange, ylabel, xlabel, save_path):
     cbar = plt.colorbar(im)
     cbar.set_label('Values')
 
-    # Plot borders
-    # plt.plot([0, 2.5], [0,0], 'k--', lw=0.4)
-    # plt.plot([0,0], [-0.25, 1], 'k--', lw=0.4)
     plt.xlim(xrange)
     plt.ylim(yrange)
     plt.xlabel(xlabel)
@@ -19,5 +16,4 @@ def plot2D(data, size, yrange, xrange, ylabel, xlabel, save_path):
     plt.title('Encoding accuracies')
     fig.tight_layout()
     plt.savefig(save_path)     
-    
-    
+    plt.close()

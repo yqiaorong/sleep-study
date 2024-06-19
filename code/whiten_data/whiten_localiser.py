@@ -28,7 +28,7 @@ eeg_dir = 'dataset/sleemory_localiser/preprocessed_data'
 data = scipy.io.loadmat(os.path.join(eeg_dir,'sleemory_localiser_dataset.mat'))
 prepr_data = data['ERP_all']
 imgs_all = data['imgs_all']
-print('Original test_eeg_data shape (img, ch, time)', prepr_data.shape)
+print('Original eeg_data shape (img, ch, time)', prepr_data.shape)
 
 # set channels
 ch_names = []
@@ -42,7 +42,7 @@ if args.adapt_to == '_THINGS':
     ch_names = np.delete(ch_names, [idx_Fz, idx_Fpz])
 
 num_ch = len(ch_names)
-print('Final test_eeg_data shape (img, ch, time)', prepr_data.shape)
+print('Final eeg_data shape (img, ch, time)', prepr_data.shape)
 
 # set time
 times = data['time']

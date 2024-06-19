@@ -14,7 +14,7 @@ imgs_names = os.listdir('dataset/sleemory_retrieval/image_set')
 imgs_names = [name[:-4] for name in imgs_names]
 
 
-for sub in range(16, 26):
+for sub in range(2, 3):
     if sub == 17:
         pass
     else:
@@ -25,7 +25,6 @@ for sub in range(16, 26):
         eegs = data['ERP_all']
         imgs = data['imgs_all']
 
-
         sorted_eeg_all = []
         for ses in range(2):
             
@@ -33,13 +32,14 @@ for sub in range(16, 26):
             imgs_part = imgs[:, ses][0][:,0]
             
             # Classify eeg data according to imgs names
-            sorted_eegs = []
+            sorted_eegs, sorted_idx = [], []
             for i, name in enumerate(imgs_names):
                 mask = imgs_part == name
                 eeg = eegs_part[mask]
                 print('Original test_eeg_data shape (img, ch, time)', eeg.shape)
                 sorted_eegs.append(eeg)
-                
+            sorted_idx = np.asarray(sorted_idx)
+                           
             # Whiten the data
             whitened_data = mvnn(sorted_eegs)
             sorted_eeg_all.append(whitened_data)
