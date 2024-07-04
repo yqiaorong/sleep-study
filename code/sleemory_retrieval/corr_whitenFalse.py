@@ -1,3 +1,10 @@
+"""
+Correlations between the predicted retrieval session EEG and the 
+real RE-ORDERED retrieval session EEG without whitening. The script processes one
+subject one layer at a time. The each image result is saved in individual
+subject in two sessions (AM & PM): sub >> ses >> whitenFalse >> image. 
+"""
+
 import scipy.io
 import os
 import numpy as np

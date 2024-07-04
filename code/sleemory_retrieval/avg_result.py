@@ -1,3 +1,10 @@
+"""
+The averaged correlations between the predicted retrieval session EEG and the 
+real RE-ORDERED retrieval session EEG without/without whitening. The script 
+rocesses on subject one layer at a time. The each image result is saved in individual
+subject in two sessions (AM & PM): sub >> ses >> whitenFalse/True >> avg. 
+"""
+
 import numpy as np
 import os
 from func import plot2D
@@ -6,8 +13,8 @@ from func import plot2D
 sub_list = [3]
 ses_list = [0, 1]
 num_feat = 1000
-layer = 'conv5'
-whiten = True
+layer = 'conv5' # can change
+whiten = True   # can change
 
 for sub in sub_list:
     for ses in ses_list:

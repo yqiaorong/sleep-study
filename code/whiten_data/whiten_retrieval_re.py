@@ -5,7 +5,7 @@ from func import mvnn
 
 
 print('')
-print(f'>>> Whiten sleemory retrieval EEG data <<<')
+print(f'>>> Whiten sleemory retrieval EEG data (original order) <<<')
 print('')
 
 dataset = 'retrieval'

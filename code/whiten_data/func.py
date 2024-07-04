@@ -6,12 +6,12 @@ def mvnn(all_epoched_data):
 
     Parameters
     ----------
-    epoched_data : list of arrays of shape (image,channel,time)
+    epoched_data : list of arrays of shape (rep,channel,time)
         Epoched EEG data.
 
     Returns
     -------
-    whitened_data : list of arrays of shape (image,channel,time)
+    whitened_data : list of arrays of shape (rep,channel,time)
         Whitened EEG data.
     """
 

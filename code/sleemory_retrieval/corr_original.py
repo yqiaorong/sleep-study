@@ -1,3 +1,10 @@
+"""
+Correlations between the predicted retrieval session EEG and the 
+real ORIGINAL-ORDERED retrieval session EEG with whitening. The script processes one
+subject one layer at a time. The each image result is saved in individual
+subject in two sessions (AM & PM): sub >> ses >> whitenFalse >> image. 
+"""
+
 import os
 import numpy as np
 from tqdm import tqdm
@@ -64,7 +71,7 @@ for ses in range(2):
                 enc_acc[trial_idx, t_pred, t_test] = test_val.corr(pred_val)
                     
         # Save data
-        save_dir = f'output/sleemory_retrieval/enc_acc/sub-{sub:03d}/ses-{ses}/{num_feat}feats_whiten{whiten}'
+        save_dir = f'output/sleemory_retrieval/enc_acc/sub-{sub:03d}/ses-{ses}/{num_feat}feats_whiten{whiten}_origin'
         if os.path.isdir(save_dir) == False:
             os.makedirs(save_dir)
         save_path = os.path.join(save_dir, f'{layer}_enc_acc')
