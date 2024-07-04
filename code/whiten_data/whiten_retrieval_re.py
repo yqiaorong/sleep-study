@@ -16,7 +16,7 @@ imgs_names = os.listdir('dataset/sleemory_retrieval/image_set')
 imgs_names = [name[:-4] for name in imgs_names]
 
 
-for sub in range(2, 27):
+for sub in range(2, 5):
     if sub == 17:
         pass
     else:

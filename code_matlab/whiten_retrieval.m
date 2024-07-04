@@ -9,7 +9,7 @@ imgs_names = cellfun(@(x) x(1:end-4), {img_files.name}, 'UniformOutput', false);
         end
         
         % Load the test EEG data
-        eeg_dir = sprintf('dataset/sleemory_retrieval/preprocessed_data');
+        eeg_dir = sprintf('dataset/sleemory_retrieval/preprocessed_data/');
         data = load(fullfile(eeg_dir, sprintf('sleemory_retrieval_dataset_sub-%03d.mat', sub)));
         eegs_sub = data.ERP_all; % (1, 2)
         imgs_sub = data.imgs_all; % (1, 2)
@@ -95,7 +95,7 @@ function whitened_data = mvnn(all_epoched_data)
     mean_sigma = mean(cat(3, tot_sigma{:}), 3);
 
     % Compute the inverse of the covariance matrix
-    sigma_inv = mean_sigma^(-0.5);
+    sigma_inv = inv(mean_sigma)^(0.5)
 
     % Whiten the data
     whitened_data = cell(num_images, 1);
