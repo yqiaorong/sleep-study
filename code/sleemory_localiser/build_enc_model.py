@@ -35,4 +35,3 @@ model_dir = 'dataset/sleemory_localiser/model/reg_model'
 if os.path.isdir(model_dir) == False:
 	os.makedirs(model_dir)
 pickle.dump(reg, open(f'{model_dir}/CLIP_reg_model.pkl','wb'))
-
