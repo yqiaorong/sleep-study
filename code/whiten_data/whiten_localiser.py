@@ -9,7 +9,7 @@ import argparse
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--adapt_to', default=None, type=str)
+parser.add_argument('--adapt_to', default='', type=str)
 args = parser.parse_args()
 
 print('')
@@ -62,7 +62,7 @@ unique_imgs = [item for img in unique_imgs for item in img]
 # Sort the test eeg data
 tot_test_eeg = [] # storing all EEG for each img
 # Iterate over images
-for idx, img in enumerate(tqdm(unique_imgs, desc='Average test eeg across unique images')):
+for idx, img in enumerate(tqdm(unique_imgs, desc='unique images')):
     img_indices = np.where(imgs_all == img)[0]
     # select corresponding prepr data
     select_data = prepr_data[img_indices]
@@ -78,10 +78,10 @@ for idx, img in enumerate(tqdm(unique_imgs, desc='Average test eeg across unique
 tot_test_eeg = mvnn(tot_test_eeg)
 
 # Average z scored total test eeg data
-test_eeg2 = np.empty((len(unique_imgs), num_ch, t_sleemory))
+test_eeg = np.empty((len(unique_imgs), num_ch, t_sleemory))
 for i, data in enumerate(tot_test_eeg):
     new_data = np.mean(data, axis=0)
-    test_eeg2[i] = new_data
+    test_eeg[i] = new_data
 del tot_test_eeg
 
 
@@ -95,6 +95,5 @@ save_dir = f'output/sleemory_localiser{args.adapt_to}/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
     
-save_dict = {'test_eeg2': test_eeg2}
-np.save(os.path.join(save_dir, f'whiten_test_eeg'), save_dict)
-scipy.io.savemat(os.path.join(save_dir, f'whiten_test_eeg.mat'), save_dict)
+scipy.io.savemat(os.path.join(save_dir, f'unique_whiten_eeg.mat'), {'whiten_eeg': test_eeg,
+                                                                    'unique_img': unique_imgs})

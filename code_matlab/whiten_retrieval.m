@@ -95,7 +95,7 @@ function whitened_data = mvnn(all_epoched_data)
     mean_sigma = mean(cat(3, tot_sigma{:}), 3);
 
     % Compute the inverse of the covariance matrix
-    sigma_inv = inv(mean_sigma)^(0.5)
+    sigma_inv = inv(mean_sigma)^(0.5);
 
     % Whiten the data
     whitened_data = cell(num_images, 1);

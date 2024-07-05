@@ -22,7 +22,7 @@ def mvnn(all_epoched_data):
 
     ### Compute the covariance matrices ###
     tot_sigma = []
-    for data in tqdm(all_epoched_data, desc='Whiten data across img conditions'): # Iterate over imgs
+    for data in all_epoched_data: # Iterate over imgs
         
         # Notations
         num_rep = data.shape[0]

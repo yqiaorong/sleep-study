@@ -3,16 +3,14 @@ import scipy
 import numpy as np
 from func import mvnn
 
-
-print('')
-print(f'>>> Whiten sleemory retrieval EEG data (original order) <<<')
-print('')
-
 dataset = 'retrieval'
+print('')
+print(f'>>> Whiten sleemory {dataset} EEG data (original order) <<<')
+print('')
 
 
 # List of imgs names
-imgs_names = os.listdir('dataset/sleemory_retrieval/image_set')
+imgs_names = os.listdir(f'dataset/sleemory_{dataset}/image_set')
 imgs_names = [name[:-4] for name in imgs_names]
 
 

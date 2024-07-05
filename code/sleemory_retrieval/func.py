@@ -13,7 +13,7 @@ def plot2D(data, size, yrange, xrange, ylabel, xlabel, save_path):
     plt.ylim(yrange)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.title('Encoding accuracies')
+    # plt.title('Correlation coefficient')
     fig.tight_layout()
     plt.savefig(save_path)     
     plt.close()
