@@ -11,12 +11,13 @@ from torchvision import transforms as trn
 # =============================================================================
 # Input arguments
 # =============================================================================
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default=None, type=str)
 args = parser.parse_args()
 
 print('')
-print('Extract sleemory images feature maps CLIP <<<')
+print('>>> Extract sleemory images feature maps CLIP <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -84,7 +85,7 @@ def get_features(dataset, size):
     return torch.cat(all_features).cpu().numpy()
 
 all_fmaps = get_features(img_dataset, size)
-print(all_fmaps.shape)
+
 # Save feature maps
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
 if os.path.isdir(save_dir) == False:

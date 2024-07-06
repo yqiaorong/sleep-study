@@ -3,26 +3,41 @@ from func import plot2D
 import numpy as np
 import os
 from tqdm import tqdm
+import argparse
 
+# =============================================================================
+# Input arguments
+# =============================================================================
 
-# whiten
-data_type = '' # [/_whitenFalse]
+parser = argparse.ArgumentParser()
+parser.add_argument('--networks', default=None, type=str)
+parser.add_argument('--data_type', default='', type=str) # [/_whitenFalse]
+args = parser.parse_args()
 
-save_dir = f'output/sleemory_retrieval/enc_acc_avg{data_type}'
+print('')
+print(f'>>> Plot the average correlation of the encoding model using {args.networks} <<<')
+print('\nInput arguments:')
+for key, val in vars(args).items():
+	print('{:16} {}'.format(key, val))
+
+ 
+
+save_dir = f'output/sleemory_retrieval/enc_acc_avg{args.data_type}'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
 
+if args.networks == 'Alexnet':
+    layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8']
+else:
+    layers = [args.networks]
 
-layers = [# 'conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8', 
-          'CLIP']
 for layer in layers:
-    
     # Get the avg data
     sub_avg_data = []
     for sub in tqdm(range(2,27), desc='subject'):
         if sub != 17:
-            data = scipy.io.loadmat(f'output/sleemory_retrieval/enc_acc/sub-{sub:03d}/{layer}_enc_acc_all{data_type}.mat')
+            data = scipy.io.loadmat(f'output/sleemory_retrieval/enc_acc/sub-{sub:03d}/{layer}_enc_acc_all{args.data_type}.mat')
             sub_avg_data.append(np.mean(data['enc_acc'], axis=1)) # (2, test_time, pred_time)
     sub_avg_data = np.mean(sub_avg_data, axis=0)
     

@@ -1,16 +1,16 @@
+num_feat = 1000; % input
+
 % Load img names
 imgDir = 'dataset/sleemory_retrieval/image_set';
 imgFiles = dir(fullfile(imgDir, '*.jpg'));
 imgNames = {imgFiles.name};
 imgNames = cellfun(@(x) x(1:end-4), imgNames, 'UniformOutput', false);
 
-layers = {'CLIP'};
+layers = {'conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8'};
 for sub = 18:26
     disp(sub)
     save_dir = sprintf('%s%03d', 'output/sleemory_retrieval/enc_acc/sub-', sub);
-    if ~isfolder(save_dir)
-       mkdir(save_dir);
-    end
+    mkdir(save_dir)
 
     % Load whitened EEG data
     test_path = sprintf('%s%03d%s', 'output\sleemory_retrieval\whiten_eeg_original\whiten_test_eeg_sub-', sub, '.mat');
@@ -24,9 +24,9 @@ for sub = 18:26
         layer = layers{idx};
     
         % Load pred EEG data
-        pred_path = sprintf('output/sleemory_retrieval/pred_eeg/CLIP_pred_eeg.mat');
+        pred_path = sprintf('%s%d%s', 'output/sleemory_retrieval/test_pred_eeg/pred_eeg_with_', num_feat, 'feats.mat'); % ONLY DIFFERENCE
         pred_data = load(pred_path);
-        pred_data = pred_data.pred_eeg; % (4, 58, 363)
+        pred_data = pred_data.(layer); % (4, 58, 363)
        
         % Duplicate the pred EEG data based on img names
         final_pred_data = zeros(2, 100, 58, 363);

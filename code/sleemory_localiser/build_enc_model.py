@@ -3,17 +3,33 @@ import scipy.io
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import pickle
+import argparse
 
-model = 'CLIP'
+# =============================================================================
+# Input arguments
+# =============================================================================
 
-if model == 'CLIP':
-    ### Load the training DNN feature maps ###
-    dnn_train_dir = os.path.join('dataset/sleemory_localiser/dnn_feature_maps')
-    dnn_fmaps_train = scipy.io.loadmat(f'{dnn_train_dir}/CLIP_fmaps.mat')
-    # Load fmaps
-    fmap = dnn_fmaps_train['fmaps'] # (img, num_feat)
-    # load labels
-    fmap_labels = os.listdir('dataset/sleemory_localiser/image_set') # len(img)
+parser = argparse.ArgumentParser()
+parser.add_argument('--networks', default=None, type=str)
+args = parser.parse_args()
+
+print('')
+print(f'>>> Train the encoding model <<<')
+print('\nInput arguments:')
+for key, val in vars(args).items():
+	print('{:16} {}'.format(key, val))
+ 
+ 
+
+### Load the training DNN feature maps ###
+dnn_fmaps_train = scipy.io.loadmat(f'dataset/sleemory_localiser/dnn_feature_maps/{args.networks}_fmaps.mat')
+# Load fmaps
+fmap = dnn_fmaps_train['fmaps'] # (img, 'num_token', num_feat)
+if args.networks == 'BLIP-2': # Need to select token or mean pooling
+    fmap = np.mean(fmap, axis=1)
+
+### load labels ###
+fmap_labels = os.listdir('dataset/sleemory_localiser/image_set') # len(img)
 
 
 
@@ -34,4 +50,4 @@ reg = LinearRegression().fit(fmap, eeg)
 model_dir = 'dataset/sleemory_localiser/model/reg_model'
 if os.path.isdir(model_dir) == False:
 	os.makedirs(model_dir)
-pickle.dump(reg, open(f'{model_dir}/CLIP_reg_model.pkl','wb'))
+pickle.dump(reg, open(f'{model_dir}/{args.networks}_reg_model.pkl','wb'))
