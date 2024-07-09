@@ -1,7 +1,6 @@
 from PIL import Image
 import os
 import torch
-from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as trn
 import argparse
 from tqdm import tqdm
