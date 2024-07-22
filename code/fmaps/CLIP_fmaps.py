@@ -16,25 +16,29 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default=None, type=str)
 args = parser.parse_args()
 
+DNNetworks = 'CLIP'
+
 print('')
-print('>>> Extract sleemory images feature maps CLIP <<<')
+print(f'>>> Extract sleemory images feature maps ({DNNetworks}) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
  
- 
 
-# =============================================================================
-# Create dataset
-# =============================================================================
 
 # Define the transform for images (Same as Alexnet)
 size = 224
-centre_crop = trn.Compose([
+img_prepr = trn.Compose([
 	trn.Resize((size,size)),
 	trn.ToTensor(),
 	trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
+
+
+
+# =============================================================================
+# Create dataset
+# =============================================================================
 
 # Customise dataset
 class CustomImageDataset(Dataset):
@@ -59,7 +63,7 @@ class CustomImageDataset(Dataset):
 
 # Load images and convert to dataset
 img_dir = f'dataset/sleemory_{args.dataset}/image_set/'
-img_dataset = CustomImageDataset(img_dir=img_dir, transform=centre_crop)
+img_dataset = CustomImageDataset(img_dir=img_dir, transform=img_prepr)
 
 
 
@@ -90,4 +94,4 @@ all_fmaps = get_features(img_dataset, size)
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/CLIP_fmaps.mat', {'fmaps': all_fmaps}) 
+scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': all_fmaps}) 

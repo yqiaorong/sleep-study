@@ -1,9 +1,9 @@
-from PIL import Image
-import os
 import torch
+from PIL import Image
 from torchvision import transforms as trn
-import argparse
+import os
 from tqdm import tqdm
+import argparse
 import scipy
 
 # =============================================================================
@@ -14,59 +14,66 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default=None, type=str)
 args = parser.parse_args()
 
-DNNetworks = 'BLIP-2'
+DNNetworks = 'resnext'
 
 print('')
-print(f'>>> Extract sleemory images feature maps {DNNetworks} <<<')
+print(f'>>> Extract sleemory images feature maps ({DNNetworks}) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
  
- 
- 
 # =============================================================================
-# Create dataset
+# Define image preprocessing
 # =============================================================================
- 
-# Define the transform for images (Same as Alexnet)
+
 size = 224
-centre_crop = trn.Compose([
+img_prepr = trn.Compose([
 	trn.Resize((size,size)),
 	trn.ToTensor(),
-	# trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+	trn.Normalize([0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
-    
+
 # =============================================================================
-# Image feature maps
+# Load the networks
 # =============================================================================
 
-# Load model
-from transformers import AutoProcessor, Blip2Model
-model = Blip2Model.from_pretrained("Salesforce/blip2-opt-2.7b") # customize
-processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b", # customize
-                                          do_rescale=False) 
+model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x8d_wsl')
+model.eval()
 
-# Use GPU
+# Use GPU otherwise CPU
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)
 
-img_dir = f'dataset/sleemory_{args.dataset}/image_set/'
+# =============================================================================
+# Extract features
+# =============================================================================
 
-# Extract feature maps
-all_feats = []
+# Set up the features
+all_feats = {}
+def hook_fn(module, input, output):
+    all_feats['fc'] = output
+model.fc.register_forward_hook(hook_fn)
+
+# Extract
+img_dir = f'dataset/sleemory_{args.dataset}/image_set/'
+fmaps = None
 for img_name in tqdm(os.listdir(img_dir)):
     img = Image.open(os.path.join(img_dir, img_name)).convert('RGB')
-    img = centre_crop(img) # transform
-    inputs = processor(images=img, return_tensors="pt")
+    img = img_prepr(img) # transform
+    input_batch = img.unsqueeze(0) # create a mini-batch as expected by the model
     with torch.no_grad():
-        outputs = model.get_image_features(**inputs)
-        feats = outputs.last_hidden_state # convert output to tensor
-        all_feats.append(feats)
-    all_fmaps = torch.cat(all_feats).cpu().numpy() # change tensor to array
-print(all_fmaps.shape) # (img, token, feat)
+        output = model(input_batch)
+        
+    # Access the FC layer features
+    fc_output = all_feats['fc']   
+    if fmaps is None:
+        fmaps = fc_output
+    else:
+        fmaps = torch.vstack((fmaps, fc_output))
+print(fmaps.shape)
 
 # Save feature maps
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': all_fmaps}) 
+scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': fmaps}) 
