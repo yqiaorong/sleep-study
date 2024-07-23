@@ -1,4 +1,16 @@
 dataset/
-output/
-!output/sleemory_retrieval/pred_eeg/
+
+output/sleemory_localiser
+output/sleemory_localiser_THINGS
+output/THINGS_EEG1
+output/THINGS_EEG2
+
+output/sleemory_retrieval/enc_acc
+output/sleemory_retrieval/enc_acc_avg
+output/sleemory_retrieval/test_pred_eeg
+output/sleemory_retrieval/whiten_eeg
+
+# temporarily ignored
+output/sleemory_retrieval/whiten_eeg_original 
+
 code/fmaps/archive
