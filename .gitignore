@@ -1,4 +1,15 @@
-dataset/
+dataset/THINGS_EEG1
+dataset/THINGS_EEG2
+
+dataset/sleemory_localiser/dnn_feature_maps
+dataset/sleemory_localiser/image_set
+dataset/sleemory_localiser/model
+dataset/sleemory_localiser/preprocessed_data
+
+dataset/sleemory_retrieval/dnn_feature_maps
+dataset/sleemory_retrieval/image_set
+dataset/sleemory_retrieval/preprocessed_data
+dataset/sleemory_retrieval/BLIP-2_lang_model_feats.npz
 
 output/sleemory_localiser
 output/sleemory_localiser_THINGS

@@ -69,8 +69,7 @@ for img_name in tqdm(os.listdir(img_dir)):
     if fmaps is None:
         fmaps = fc_output
     else:
-        fmaps = torch.vstack((fmaps, fc_output))
-print(fmaps.shape)
+        fmaps = torch.vstack((fmaps, fc_output)) # (num_img, num_feat 1000)
 
 # Save feature maps
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'

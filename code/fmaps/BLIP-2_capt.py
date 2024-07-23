@@ -64,7 +64,7 @@ for img_name in tqdm(os.listdir(img_dir)):
     lang_feat = lang_model_out.logits
     lang_feats.append(lang_feat.squeeze().detach().numpy())
 lang_feats = np.asarray(lang_feats)
-
+print(lang_feats.shape)
 # =============================================================================
 # Save
 # =============================================================================
@@ -75,8 +75,8 @@ if os.path.isdir(save_dir) == False:
 
 # Save the captions
 df = pd.DataFrame({'img_names': os.listdir(img_dir), 'gen_texts': gen_texts})
-df.to_csv(f'{save_dir}/{DNNetworks}_captions.csv')
+df.to_csv(f'{save_dir}/{DNNetworks}_autocapt.csv')
 
 # Save the lang feats
-np.savez(f'{save_dir}/{DNNetworks}_lang_model_feats.npz', *lang_feats)
-# scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'lang_model_feats': lang_feats}) 
+# np.savez(f'{save_dir}/dnn_feature_maps/{DNNetworks}_text_fmaps_autocapt.npz', *lang_feats)
+# scipy.io.savemat(f'{save_dir}/dnn_feature_maps/{DNNetworks}_text_fmaps_autocapt.mat', {'lang_model_feats': lang_feats}) 

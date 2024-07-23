@@ -38,7 +38,9 @@ The order of running the scripts:
 
 * resnext_fmaps.py --dataset [ localiser / retrieval ]
 
-* BLIP-2_capt.py --dataset [ localiser / retrieval ] (This script generates captions for images and extracts text features. )
+* BLIP-2_capt.py --dataset [ localiser / retrieval ] (This script generates captions for images and extracts text features from automatically generated texts.)
+
+* BLIP-2_text_feats.py --dataset [ localiser / retrieval ] --text_type (This script extracts the text features from either image names or the filtered generated texts.)
 
 ### sleemory_localiser/
 
