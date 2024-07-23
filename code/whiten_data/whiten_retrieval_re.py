@@ -61,5 +61,5 @@ for sub in range(2, 5):
             os.makedirs(save_dir)
             
         save_dict = {'whitened_data': sorted_eeg_all, 'imgs_all': imgs_sub}
-        np.save(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}'), save_dict)
+        # np.save(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}'), save_dict)
         scipy.io.savemat(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}.mat'), save_dict)

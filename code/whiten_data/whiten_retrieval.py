@@ -1,3 +1,8 @@
+"""This script whitens/standardises the eeg data and re-order it.
+The script is archived. Please use 'whiten_retrieval_re.py' to
+whiten the data which keeps the data in original order.
+"""
+
 import os
 import scipy
 import numpy as np
@@ -50,5 +55,5 @@ for sub in range(2, 3):
             os.makedirs(save_dir)
             
         save_dict = {'whitened_data': sorted_eeg_all, 'imgs_all': imgs_names}
-        np.save(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}'), save_dict)
-        # scipy.io.savemat(os.path.join(save_dir, f'whiten_test_eeg.mat'), save_dict)
+        # np.save(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}'), save_dict)
+        scipy.io.savemat(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}.mat'), save_dict)

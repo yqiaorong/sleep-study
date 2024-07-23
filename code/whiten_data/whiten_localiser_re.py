@@ -1,3 +1,8 @@
+"""This script whitens the sleemory localiser eeg and keeps the original order 
+by stacking eegs with the same stimuli, whitening them and then assigning them
+back according to original stimuli order. Not quite useful for later analysis.
+"""
+
 import os
 import scipy
 import numpy as np
@@ -54,4 +59,5 @@ save_dir = f'output/sleemory_localiser/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
-scipy.io.savemat(os.path.join(save_dir, f'origin_whiten_eeg.mat'), {'whiten_eeg': whitened_data_re})
+scipy.io.savemat(os.path.join(save_dir, f'origin_whiten_eeg.mat'), 
+                 {'whiten_eeg': whitened_data_re})
