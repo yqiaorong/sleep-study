@@ -22,13 +22,34 @@ The download path: ../code/
 
 The order of running the scripts: 
 
+### famps/
 
-THINGS_preprocess
+* Alexnet_full_fmaps.py --dataset [ localiser / retrieval ] --pretrained 
+  
+  Alexnet_best_fmaps.py --dataset [ localiser / retrieval ] --pretrained --num_feat
+
+* CLIP_fmaps.py --dataset [ localiser / retrieval ]
+
+* resnext_fmaps.py --dataset [ localiser / retrieval ]
+
+* BLIP-2_capt.py --dataset [ localiser / retrieval ] (This script generates captions for images and extracts text features. )
+
+### sleemory_localiser/
+
+* build_enc_model.py --networks
+
+* pred_eeg.py --networks
+
+### sleemory_retrieval/
+
+
+
+### THINGS_preprocess/
 
 * preprocess_all.py --sfreq --adapt_to (This file preprocesses all THINGS EEG2 and EEG1 raw data. If it's adapted to sleemory, sfreq = 250, adapt_to = _sleemory )
 
 
-THINGS/
+### THINGS/
 
 * 1_alexnet.py (This file extracts THINGS images features by Alexnet. )
 

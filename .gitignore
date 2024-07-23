@@ -1,3 +1,4 @@
 dataset/
 output/
+!output/sleemory_retreival/pred_eeg
 code/fmaps/archive
