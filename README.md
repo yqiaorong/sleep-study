@@ -22,7 +22,7 @@ The download path: ../code/
 
 The order of running the scripts: 
 
-### whiten_data
+### whiten_data/
 
 * whiten_localiser.py --adapt_to [ /_sleemory] (This script whitens the sleemory localiser eeg and re-orders it according to the image order by stacking eegs with the same stimuli, whitening them and then taking the average as the final whitened eeg representing the corresponding image.)
 
