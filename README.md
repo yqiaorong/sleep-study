@@ -30,9 +30,9 @@ The order of running the scripts:
 
 ### fmaps/
 
-* Alexnet_full_fmaps.py --dataset [ localiser / retrieval ] --pretrained 
+* Alexnet_full_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained 
   
-  Alexnet_best_fmaps.py --dataset [ localiser / retrieval ] --pretrained --num_feat
+  Alexnet_best_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
 
 * CLIP_fmaps.py --dataset [ localiser / retrieval ]
 
@@ -44,13 +44,13 @@ The order of running the scripts:
 
 * gptneo_capt.py --dataset [ localiser / retrieval ] 
 
-  gptneo_best_fmaps.py --dataset [ localiser / retrieval ] --num_feat
+  gptneo_best_fmaps.py --dataset [ localiser / retrieval ] --num_feat --whiten
 
 ### sleemory_localiser/
 
-* build_enc_model.py --networks
+* build_enc_model.py --networks --num_feat (countain additional prompt of 'whiten')
 
-* pred_eeg.py --networks
+* pred_eeg.py --networks --num_feat --whiten
 
 ### sleemory_retrieval/
 
