@@ -9,7 +9,8 @@ import argparse
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--adapt_to', default='', type=str)
+parser.add_argument('--adapt_to', default='',  type=str)
+parser.add_argument('--whiten', default=False, type=bool)
 args = parser.parse_args()
 
 print('')
@@ -20,7 +21,7 @@ for key, val in vars(args).items():
 print('')
 
 # =============================================================================
-# Predict EEG from fmaps
+# Load raw localiser EEG data
 # =============================================================================
 
 # Load the test EEG data directory
@@ -28,7 +29,7 @@ eeg_dir = 'dataset/sleemory_localiser/preprocessed_data'
 data = scipy.io.loadmat(os.path.join(eeg_dir,'sleemory_localiser_dataset.mat'))
 prepr_data = data['ERP_all']
 imgs_all = data['imgs_all']
-print('Original eeg_data shape (img, ch, time)', prepr_data.shape)
+print('Original eeg_data shape (trial, ch, time)', prepr_data.shape)
 
 # set channels
 ch_names = []
@@ -40,16 +41,14 @@ if args.adapt_to == '_THINGS':
     idx_Fz, idx_Fpz = ch_names.index('Fz'), ch_names.index('Fpz')
     prepr_data = np.delete(prepr_data, [idx_Fz, idx_Fpz], axis=1)
     ch_names = np.delete(ch_names, [idx_Fz, idx_Fpz])
-
+    print(f'eeg_data shape after adaptation to {args.adapt_to} (trial, ch, time)', prepr_data.shape)
+    
 num_ch = len(ch_names)
-print('Final eeg_data shape (img, ch, time)', prepr_data.shape)
 
 # set time
 times = data['time']
 t_sleemory = times.shape[1]
 del data
-
-
 
 # =============================================================================
 # Categorize the preprocessed data
@@ -69,13 +68,12 @@ for idx, img in enumerate(tqdm(unique_imgs, desc='unique images')):
     # Append data
     tot_test_eeg.append(select_data)
     
-    
-
 # =============================================================================
 # Z score the data
 # =============================================================================
 
-tot_test_eeg = mvnn(tot_test_eeg)
+if args.whiten == True:
+    tot_test_eeg = mvnn(tot_test_eeg)
 
 # Average z scored total test eeg data
 test_eeg = np.empty((len(unique_imgs), num_ch, t_sleemory))
@@ -83,6 +81,7 @@ for i, data in enumerate(tot_test_eeg):
     new_data = np.mean(data, axis=0)
     test_eeg[i] = new_data
 del tot_test_eeg
+print(f'eeg_data shape after whiten ({args.whiten}) (img, ch, time)', test_eeg.shape)
 
 
 
@@ -94,6 +93,10 @@ del tot_test_eeg
 save_dir = f'output/sleemory_localiser{args.adapt_to}/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
-    
-scipy.io.savemat(os.path.join(save_dir, f'unique_whiten_eeg.mat'), {'whiten_eeg': test_eeg,
-                                                                    'unique_img': unique_imgs})
+
+if args.whiten == True:
+    fname_insert = 'whiten_'
+else:
+    fname_insert = ''
+scipy.io.savemat(os.path.join(save_dir, f'unique_{fname_insert}eeg.mat'), 
+                 {f'{fname_insert}eeg': test_eeg, 'unique_img': unique_imgs})

@@ -99,6 +99,7 @@ for root, _, files in os.walk(img_set_dir):
 		if file.endswith(".jpg") or file.endswith(".JPEG"):
 			image_list.append(os.path.join(root,file))
 image_list.sort()
+print(len(image_list))
 
 # Create the saving directory if not existing
 save_dir = os.path.join('dataset', args.dataset, 'dnn_feature_maps',
