@@ -49,8 +49,15 @@ if os.path.isdir(save_dir) == False:
 all_layers = fmaps.keys()
 for layer in all_layers:
     print(layer)
+    
     if args.num_feat == -1:
         best_feat = fmaps[layer]
+        print(best_feat.shape)
+        # Save new features
+        best_fmaps_fname = f'{layer}_{whiten}fmaps.mat'
+        print(best_fmaps_fname)
+        scipy.io.savemat(f'{save_dir}/{best_fmaps_fname}', {'fmaps': best_feat}) 
+
     else:
         model_fname = f'{layer}-best-{args.num_feat}_{whiten}feat_model.pkl'
         # layers names
