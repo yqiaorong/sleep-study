@@ -20,8 +20,7 @@ for sub in range(2, 5):
     else:
         # Load the test EEG data
         eeg_dir = f'dataset/sleemory_{dataset}/preprocessed_data'
-        data = scipy.io.loadmat(os.path.join(eeg_dir,
-                                f'sleemory_retrieval_dataset_sub-{sub:03d}.mat'))
+        data = scipy.io.loadmat(f'{eeg_dir}sleemory_retrieval_dataset_sub-{sub:03d}.mat')
         eegs_sub = data['ERP_all'] # (1, 2)
         imgs_sub = data['imgs_all'] # (1, 2)
         del data
@@ -61,5 +60,4 @@ for sub in range(2, 5):
             os.makedirs(save_dir)
             
         save_dict = {'whitened_data': sorted_eeg_all, 'imgs_all': imgs_sub}
-        # np.save(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}'), save_dict)
         scipy.io.savemat(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}.mat'), save_dict)
