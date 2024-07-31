@@ -12,7 +12,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--networks', default=None, type=str)
 # If it's Alexnet, specify the layer name
 parser.add_argument('--num_feat', default=None, type=int)
-# num_feat = -1 means using all features, If it's Alexnet, num_feat cannot be -1
 parser.add_argument('--whiten',  default=False, type=bool) # This indicates the reg model
 args = parser.parse_args()
 

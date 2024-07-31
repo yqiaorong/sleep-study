@@ -20,7 +20,7 @@ for sub in range(2, 5):
     else:
         # Load the test EEG data
         eeg_dir = f'dataset/sleemory_{dataset}/preprocessed_data'
-        data = scipy.io.loadmat(f'{eeg_dir}sleemory_retrieval_dataset_sub-{sub:03d}.mat')
+        data = scipy.io.loadmat(f'{eeg_dir}/sleemory_retrieval_dataset_sub-{sub:03d}.mat')
         eegs_sub = data['ERP_all'] # (1, 2)
         imgs_sub = data['imgs_all'] # (1, 2)
         del data

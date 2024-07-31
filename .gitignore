@@ -21,7 +21,4 @@ output/sleemory_retrieval/enc_acc_avg
 output/sleemory_retrieval/test_pred_eeg
 output/sleemory_retrieval/whiten_eeg
 
-# temporarily ignored
-output/sleemory_retrieval/whiten_eeg_original 
-
 code/fmaps/archive
