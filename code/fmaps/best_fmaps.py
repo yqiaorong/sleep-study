@@ -9,9 +9,10 @@ from sklearn.feature_selection import SelectKBest, f_regression
 # Input arguments
 # =============================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_feat',   default=1000, type=int)
-parser.add_argument('--dataset',    default=None, type=str)
-parser.add_argument('--whiten',     default=False,type=bool)
+parser.add_argument('--networks', default=None, type=str) # [gptneo / resnext]
+parser.add_argument('--num_feat', default=1000, type=int)
+parser.add_argument('--dataset',  default=None, type=str)
+parser.add_argument('--whiten',   default=False,type=bool)
 args = parser.parse_args()
 
 print('')  
@@ -31,9 +32,7 @@ else:
 # Load the feature maps
 # =============================================================================
 
-DNNetworks = 'gptneo'
-
-fmaps = scipy.io.loadmat(f'dataset/sleemory_{args.dataset}/dnn_feature_maps/{DNNetworks}_fmaps.mat')
+fmaps = scipy.io.loadmat(f'dataset/sleemory_{args.dataset}/dnn_feature_maps/{args.networks}_fmaps.mat')
 fmaps = fmaps['fmaps']
 print('The original fmaps shape: ', fmaps.shape)
 
@@ -42,7 +41,7 @@ print('The original fmaps shape: ', fmaps.shape)
 # =============================================================================
 
 # Set up the model dir and name
-model_fname = f'{DNNetworks}-best-{args.num_feat}_{whiten}feat_model.pkl'
+model_fname = f'{args.networks}-best-{args.num_feat}_{whiten}feat_model.pkl'
 print(model_fname)
 
 # Fit feature selection model and transform
@@ -91,6 +90,6 @@ if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
  
 # Save new features
-best_fmaps_fname = f'{DNNetworks}-best-{args.num_feat}_{whiten}fmaps.mat'
+best_fmaps_fname = f'{args.networks}-best-{args.num_feat}_{whiten}fmaps.mat'
 print(best_fmaps_fname)
 scipy.io.savemat(f'{save_dir}/{best_fmaps_fname}', {'fmaps': best_feat}) 
