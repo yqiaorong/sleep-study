@@ -30,17 +30,18 @@ def mvnn(all_epoched_data):
         num_time = data.shape[2]
         
         # Covariance matrix of shape (EEG channels × EEG channels)
-        sigma = np.mean([_cov(data[:,:,t], shrinkage='auto') for t in range(num_time)],
+        sigma = np.mean([np.cov(data[:,:,t].swapaxes(0,1)) for t in range(num_time)],
                         axis=0)
         tot_sigma.append(sigma)
         
     # Average the covariance matrices across image conditions
     tot_sigma = np.array(tot_sigma)
     mean_sigma = np.mean(tot_sigma, axis=0)
-
-    # # Compute the inverse of the covariance matrix
+    # mean_sigma = np.round(mean_sigma, 11)
+ 
+    # Compute the inverse of the covariance matrix
     sigma_inv = scipy.linalg.fractional_matrix_power(mean_sigma, -0.5)
-  
+    print(sigma_inv)
     ### Whiten the data ###
     whitened_data = []
     for data in all_epoched_data: # Iterate over imgs     
