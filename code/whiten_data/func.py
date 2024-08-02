@@ -41,7 +41,7 @@ def mvnn(all_epoched_data):
  
     # Compute the inverse of the covariance matrix
     sigma_inv = scipy.linalg.fractional_matrix_power(mean_sigma, -0.5)
-    print(sigma_inv)
+    
     ### Whiten the data ###
     whitened_data = []
     for data in all_epoched_data: # Iterate over imgs     

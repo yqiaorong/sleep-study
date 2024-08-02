@@ -16,7 +16,7 @@ imgs_names = cellfun(@(x) x(1:end-4), {img_files.name}, 'UniformOutput', false);
         imgs_sub = data.imgs_all; % (1, 2)
         clear data;
 
-        sorted_eeg_all = cell(2,100,58,626); % Final data of two sessions
+        sorted_eeg_all = cell(1,2); % Final data of two sessions
         for ses = 1:2
             eegs_ses = eegs_sub{1, ses}; % (num_trials, num_ch, num_time)
             imgs_ses = imgs_sub{1, ses};
@@ -50,7 +50,6 @@ imgs_names = cellfun(@(x) x(1:end-4), {img_files.name}, 'UniformOutput', false);
             % Append the result to sorted_eeg_all
             sorted_eeg_all{ses} = whitened_eegs_re;
         end
-        size(sorted_eeg_all)
 
         % Save the whitened EEG data
         save_dir = sprintf('output/sleemory_retrieval/whiten_eeg_matlab');
