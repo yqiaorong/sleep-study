@@ -34,6 +34,8 @@ The order of running the scripts:
   
   Alexnet_best_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
 
+  Alexnet_best_fmaps_all.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+
 * CLIP_fmaps.py --dataset [ localiser / retrieval ]
 
 * resnext_fmaps.py --dataset [ localiser / retrieval ]
