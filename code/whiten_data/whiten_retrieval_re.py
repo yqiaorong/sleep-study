@@ -13,7 +13,7 @@ print('')
 imgs_names = os.listdir(f'dataset/sleemory_{dataset}/image_set')
 imgs_names = [name[:-4] for name in imgs_names]
 
-for sub in range(2, 3):
+for sub in range(2, 27):
     if sub == 17:
         pass
     else:
@@ -53,11 +53,11 @@ for sub in range(2, 3):
             sorted_eeg_all.append(whitened_eegs_re)
              
         sorted_eeg_all = np.array(sorted_eeg_all)
-        
+        print(sorted_eeg_all.shape)
         # Save the whitened eeg data
         save_dir = f'output/sleemory_{dataset}/whiten_eeg_original'
         if os.path.isdir(save_dir) == False:
             os.makedirs(save_dir)
             
-        save_dict = {'whitened_data': whitened_eegs_re, 'imgs_all': imgs_sub}
+        save_dict = {'whitened_data': sorted_eeg_all, 'imgs_all': imgs_sub}
         scipy.io.savemat(os.path.join(save_dir, f'whiten_test_eeg_sub-{sub:03d}.mat'), save_dict)
