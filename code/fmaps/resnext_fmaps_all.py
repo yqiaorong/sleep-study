@@ -43,6 +43,7 @@ model.eval()
 # Use GPU otherwise CPU
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)
+print(device)
 
 # =============================================================================
 # Extract features
@@ -60,32 +61,27 @@ def register_hooks(model):
         module.register_forward_hook(hook_fn)
         
 register_hooks(model)        
-# print(model.named_modules())
 
 # Extract
 img_dir = f'dataset/sleemory_{args.dataset}/image_set/'
-fmaps = None
-for i, img_name in tqdm(enumerate([os.listdir(img_dir)[0]])):
+fmaps = {}
+for i, img_name in enumerate(tqdm([os.listdir(img_dir)[0]])):
     img = Image.open(os.path.join(img_dir, img_name)).convert('RGB')
     img = img_prepr(img) # transform
-    input_batch = img.unsqueeze(0) # create a mini-batch as expected by the model
+    input_batch = img.unsqueeze(0).to(device) # create a mini-batch as expected by the model
     with torch.no_grad():
         output = model(input_batch)
         
     # Access the FC layer features
-    fmaps = {}
-    for i, (layer_name, feat_vals) in enumerate(all_feats.items()):
-        if i == 0:
-             fmaps[layer_name] = all_feats[layer_name]
-        else:
-             fmaps[layer_name] = torch.vstack((fmaps[layer_name], all_feats[layer_name])) # (num_img, num_feat 1000)
-
-for layer in fmaps.keys():
-    print(layer, fmaps[layer].shape)
-print(len(fmaps.keys()))
+    if i == 0:
+        for layer_name, feat_vals in all_feats.items():
+            fmaps[layer_name] = all_feats[layer_name].flatten()
+    else:
+        for layer_name, feat_vals in all_feats.items():
+            fmaps[layer_name] = torch.vstack((fmaps[layer_name], all_feats[layer_name].flatten())) # (num_img, num_feat)
 
 # Save feature maps
-# save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
-# if os.path.isdir(save_dir) == False:
-# 	os.makedirs(save_dir)
-# scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': fmaps}) 
+save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
+if os.path.isdir(save_dir) == False:
+	os.makedirs(save_dir)
+scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': fmaps}) 
