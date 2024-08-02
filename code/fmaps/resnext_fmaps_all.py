@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default=None, type=str)
 args = parser.parse_args()
 
-DNNetworks = 'resnext'
+DNNetworks = 'ResNet'
 
 print('')
 print(f'>>> Extract sleemory images feature maps ({DNNetworks}) <<<')
@@ -51,13 +51,21 @@ model.to(device)
 # Set up the features
 all_feats = {}
 def hook_fn(module, input, output):
-    all_feats['fc'] = output
-model.fc.register_forward_hook(hook_fn)
+    layer_name = f"{module.__class__.__name__}_{id(module)}"
+    # print(layer_name)
+    all_feats[layer_name] = output
+    
+def register_hooks(model):
+    for _, module in model.named_modules():
+        module.register_forward_hook(hook_fn)
+        
+register_hooks(model)        
+# print(model.named_modules())
 
 # Extract
 img_dir = f'dataset/sleemory_{args.dataset}/image_set/'
 fmaps = None
-for img_name in tqdm(os.listdir(img_dir)):
+for i, img_name in tqdm(enumerate([os.listdir(img_dir)[0]])):
     img = Image.open(os.path.join(img_dir, img_name)).convert('RGB')
     img = img_prepr(img) # transform
     input_batch = img.unsqueeze(0) # create a mini-batch as expected by the model
@@ -65,14 +73,19 @@ for img_name in tqdm(os.listdir(img_dir)):
         output = model(input_batch)
         
     # Access the FC layer features
-    fc_output = all_feats['fc']   
-    if fmaps is None:
-        fmaps = fc_output
-    else:
-        fmaps = torch.vstack((fmaps, fc_output)) # (num_img, num_feat 1000)
+    fmaps = {}
+    for i, (layer_name, feat_vals) in enumerate(all_feats.items()):
+        if i == 0:
+             fmaps[layer_name] = all_feats[layer_name]
+        else:
+             fmaps[layer_name] = torch.vstack((fmaps[layer_name], all_feats[layer_name])) # (num_img, num_feat 1000)
+
+for layer in fmaps.keys():
+    print(layer, fmaps[layer].shape)
+print(len(fmaps.keys()))
 
 # Save feature maps
-save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
-if os.path.isdir(save_dir) == False:
-	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': fmaps}) 
+# save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
+# if os.path.isdir(save_dir) == False:
+# 	os.makedirs(save_dir)
+# scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': fmaps}) 
