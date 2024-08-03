@@ -1,4 +1,5 @@
-for sub = 2
+for sub = 4:26
+    disp(sub)
     if sub == 17
         continue;
     end
@@ -23,19 +24,19 @@ for sub = 2
        for sti = 1:100
            corr_vals(ses, sti,:,:) = corr(squeeze(meegs_sub{ses}(sti, :, :)), squeeze(peegs_sub(ses, sti, :, :)));
        end
+    
+        % Display the correlation matrix as a 2D plot
+        mean_corr_vals = mean(corr_vals, 2);
+        
+        figure;
+        imagesc(squeeze(mean_corr_vals(ses,1,:,:)));
+        axis xy
+        colorbar;
+        title('Correlation Matrix');
+        xlabel('Time (matlab)');
+        ylabel('Time (python)');
+        axis equal tight;
     end
 end
-
-% Display the correlation matrix as a 2D plot
-mean_corr_vals = mean(corr_vals, 2);
-size(mean_corr_vals)
-
-figure;
-imagesc(mean_corr_vals{1});
-colorbar;
-title('Correlation Matrix');
-xlabel('Time (matlab)');
-ylabel('Time (python)');
-axis equal tight;
 
 

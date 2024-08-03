@@ -16,6 +16,18 @@
 
 * [THINGS EEG1](https://openneuro.org/datasets/ds003825/versions/1.2.0): ../dataset/THINGS_EEG1/
 
+3. sleemory_localiser: 
+  
+  image_set: ../dataset/sleemory_localiser/image_set
+
+  preprocessed_data: ../dataset/sleemory_localiser/preprocessed_data
+
+4. sleemory_retrieval: 
+  
+  image_set: ../dataset/sleemory_localiser/image_set
+
+  preprocessed_data: ../dataset/sleemory_localiser/preprocessed_data
+
 ## code
 
 The download path: ../code/
@@ -30,23 +42,43 @@ The order of running the scripts:
 
 ### fmaps/
 
+Alexnet
+
 * Alexnet_full_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained 
   
-  Alexnet_best_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+* Alexnet_best_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
 
-  Alexnet_best_fmaps_all.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+* Alexnet_best_fmaps_all.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+
+CLIP
 
 * CLIP_fmaps.py --dataset [ localiser / retrieval ]
 
-* resnext_fmaps.py --dataset [ localiser / retrieval ]
+ResNet
+
+* resnext_fclayer_fmaps.py --dataset [ localiser / retrieval ]
+
+* resnext_full_fmaps.py --dataset [ localiser / retrieval ]
+   
+  resnext_full_fmaps_single_img.py --dataset [ localiser / retrieval ] --img_idx
+
+* resnext_best_fmaps.py --num_feat --whiten
+  
+  resnext_best_fmaps_chunk.py --layer_start_idx --num_feat --whiten
+
+  resnext_best_fmaps_all.py --old_num_feat --new_num_feat --whiten
+
+BLIP-2
 
 * BLIP-2_capt.py --dataset [ localiser / retrieval ] (This script generates captions for images and extracts text features from automatically generated texts.)
 
-  BLIP-2_text_feats.py --dataset [ localiser / retrieval ] --text_type (This script extracts the text features from either image names or the filtered generated texts.)
+* BLIP-2_text_feats.py --dataset [ localiser / retrieval ] --text_type (This script extracts the text features from either image names or the filtered generated texts.)
+
+GPT-Neo
 
 * gptneo_capt.py --dataset [ localiser / retrieval ] 
 
-  gptneo_best_fmaps.py --dataset [ localiser / retrieval ] --num_feat --whiten
+* gptneo_best_fmaps.py --dataset [ localiser / retrieval ] --num_feat --whiten
 
 ### sleemory_localiser/
 
@@ -61,7 +93,6 @@ The order of running the scripts:
 ### THINGS_preprocess/
 
 * preprocess_all.py --sfreq --adapt_to (This file preprocesses all THINGS EEG2 and EEG1 raw data. If it's adapted to sleemory, sfreq = 250, adapt_to = _sleemory )
-
 
 ### THINGS/
 

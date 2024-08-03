@@ -3,7 +3,7 @@ img_dir = 'dataset/sleemory_retrieval/image_set';
 img_files = dir(fullfile(img_dir, '*.jpg'));
 imgs_names = cellfun(@(x) x(1:end-4), {img_files.name}, 'UniformOutput', false);
 
-    for sub = 2:26
+    for sub = 5:26
         disp(sub)
         if sub == 17
             continue;
@@ -105,13 +105,16 @@ function whitened_data = mvnn(all_epoched_data)
     pyenv;
     np = py.importlib.import_module('numpy');
     linalg = py.importlib.import_module('scipy.linalg');
-    
+
     sigma_inv = linalg.fractional_matrix_power(mean_sigma, -0.5);
-    
+
     sigma_inv_data = np.ravel(sigma_inv);
     sigma_inv = double(py.array.array('d', sigma_inv_data));
 
     sigma_inv = reshape(sigma_inv, [58, 58]);
+
+    % otherwise
+    % sigma_inv = inv(real(sqrtm(mean_sigma)));
     % disp(sigma_inv);
 
     % Whiten the data
