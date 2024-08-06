@@ -46,9 +46,9 @@ Alexnet
 
 * Alexnet_full_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained 
   
-* Alexnet_best_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+* Alexnet_best_fmaps_each_layer.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
 
-* Alexnet_best_fmaps_all.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+* Alexnet_best_fmaps_all_layer.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
 
 CLIP
 
@@ -56,17 +56,17 @@ CLIP
 
 ResNet
 
-* resnext_fclayer_fmaps.py --dataset [ localiser / retrieval ]
+* resnext_fc_layer_fmaps.py --dataset [ localiser / retrieval ]
 
 * resnext_full_fmaps.py --dataset [ localiser / retrieval ]
    
   resnext_full_fmaps_single_img.py --dataset [ localiser / retrieval ] --img_idx
 
-* resnext_best_fmaps.py --num_feat --whiten
+* resnext_best_fmaps_chunkall.py --num_feat --whiten
   
   resnext_best_fmaps_chunk.py --layer_start_idx --num_feat --whiten
 
-  resnext_best_fmaps_all.py --old_num_feat --new_num_feat --whiten
+* resnext_best_fmaps_final.py --old_num_feat --new_num_feat --whiten
 
 BLIP-2
 
@@ -76,9 +76,11 @@ BLIP-2
 
 GPT-Neo
 
-* gptneo_capt.py --dataset [ localiser / retrieval ] 
+* gptneo_last_layer_fmaps.py --dataset [ localiser / retrieval ] 
 
-* gptneo_best_fmaps.py --dataset [ localiser / retrieval ] --num_feat --whiten
+* gptneo_full_fmaps.py --dataset [ localiser / retrieval ] 
+
+* gptneo_best_fmaps_all_layer.py --dataset [ localiser / retrieval ] --num_feat --whiten
 
 ### sleemory_localiser/
 
