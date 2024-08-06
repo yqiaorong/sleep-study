@@ -1,8 +1,10 @@
 import os
+import torch
 import argparse
+from tqdm import tqdm
+import pandas as pd
 import numpy as np
 import scipy
-from tqdm import tqdm
 from sklearn.feature_selection import SelectKBest, f_regression
 
 # =============================================================================
@@ -10,13 +12,12 @@ from sklearn.feature_selection import SelectKBest, f_regression
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--new_num_feat', default=1000, type=int)
-parser.add_argument('--old_num_feat', default=3000, type=int)
-parser.add_argument('--whiten',       default=True, type=bool)
+parser.add_argument('--num_feat',default=1000, type=int)
+parser.add_argument('--whiten',  default=False,type=bool)
 args = parser.parse_args()
 
 print('')
-print(f'>>> Feature selection of sleemory images feature maps (resnext) final round <<<')
+print(f'>>> Sleemory images best feature maps (gptneo) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -45,71 +46,36 @@ train_eeg = np.mean(train_eeg, -1)
 train_eeg = np.mean(train_eeg, -1)
 print('Training (localiser) EEG data shape (img,)', train_eeg.shape)
 
-
-# file list
-# layer_start_indices = range(0, 287, 50)
-layer_start_indices = [0] + list(range(50, 287, 20))
-file_list = [f'ResNet-best-{args.old_num_feat}-{idx}_{whiten}fmaps.mat' for idx in layer_start_indices]
-
 # =============================================================================
-# Load training feature maps
+# Load fmaps
 # =============================================================================
 
-train_fmaps_dir = f'dataset/sleemory_localiser/dnn_feature_maps/best_feature_maps/ResNet/'
-for ichunk, chunk in enumerate(tqdm(file_list, desc='train chunk file')):
-    train_fmaps = scipy.io.loadmat(train_fmaps_dir+chunk)
-    
-    # Concatenate layers in chunk file
-    for ilayer, layer in enumerate(list(train_fmaps.keys())[3:]):
-        if ilayer == 0:
-            train_fmaps_chunk = train_fmaps[layer]
-        else:
-            train_fmaps_chunk = np.concatenate((train_fmaps_chunk, train_fmaps[layer]), axis=1)
-    print(f'train fmaps chunk shape: {train_fmaps_chunk.shape}')
-    del train_fmaps
-    
-    # Concatenate chunk files
-    if ichunk == 0:
-        train_fmaps_all = train_fmaps_chunk
+# Load training fmaps
+train_fmaps = scipy.io.loadmat('dataset/sleemory_localiser/dnn_feature_maps/full_feature_maps/GPTNeo/gptneo_fmaps.mat')
+for ilayer, layer in enumerate(list(train_fmaps.keys())[3:]):
+    if ilayer == 0:
+        train_fmaps_all = train_fmaps[layer]
     else:
-        train_fmaps_all = np.concatenate((train_fmaps_all, train_fmaps_chunk), axis=1)
-    del train_fmaps_chunk
-print(f'train fmaps all shape: {train_fmaps_all.shape}')  
-print('')
-
-# =============================================================================
-# Load test feature maps
-# =============================================================================
-
-test_fmaps_dir = f'dataset/sleemory_retrieval/dnn_feature_maps/best_feature_maps/ResNet/'
-for ichunk, chunk in enumerate(tqdm(file_list, desc='train chunk file')):
-    test_fmaps = scipy.io.loadmat(test_fmaps_dir+chunk)
+        train_fmaps_all = np.concatenate((train_fmaps_all, train_fmaps[layer]), axis=1)
+print(f'train fmaps all shape: {train_fmaps_all.shape}') 
     
-    # Concatenate layers in chunk file
-    for ilayer, layer in enumerate(list(test_fmaps.keys())[3:]):
-        if ilayer == 0:
-            test_fmaps_chunk = test_fmaps[layer]
-        else:
-            test_fmaps_chunk = np.concatenate((test_fmaps_chunk, test_fmaps[layer]), axis=1)
-    print(f'test fmaps chunk shape: {test_fmaps_chunk.shape}')
-    del test_fmaps
-    
-    # Concatenate chunk files
-    if ichunk == 0:
-        test_fmaps_all = test_fmaps_chunk
+# Load training fmaps
+test_fmaps = scipy.io.loadmat('dataset/sleemory_retrieval/dnn_feature_maps/full_feature_maps/GPTNeo/gptneo_fmaps.mat')
+for ilayer, layer in enumerate(list(test_fmaps.keys())[3:]):
+    print(layer)
+    if ilayer == 0:
+        test_fmaps_all = test_fmaps[layer]
     else:
-        test_fmaps_all = np.concatenate((test_fmaps_all, test_fmaps_chunk), axis=1)
-    del test_fmaps_chunk
+        test_fmaps_all = np.concatenate((test_fmaps_all, test_fmaps[layer]), axis=1)
 print(f'test fmaps all shape: {test_fmaps_all.shape}')  
-    
+
 # =============================================================================
 # Feature selection
 # =============================================================================
     
 # Build the feature selection model
 feature_selection = SelectKBest(f_regression, 
-                                k=args.new_num_feat).fit(train_fmaps_all, train_eeg)
-
+                                k=args.num_feat).fit(train_fmaps_all, train_eeg)
 # Select the best features
 train_fmaps_all = feature_selection.transform(train_fmaps_all)
 test_fmaps_all = feature_selection.transform(test_fmaps_all)
@@ -130,7 +96,7 @@ if os.path.isdir(test_save_dir) == False:
     os.makedirs(test_save_dir)
 
 # Save
-best_fmaps_fname = f'ResNet-best-{args.new_num_feat}_{whiten}fmaps.mat'
+best_fmaps_fname = f'GPTNEO-best-{args.num_feat}_{whiten}fmaps.mat'
 print(best_fmaps_fname)
 scipy.io.savemat(f'{train_save_dir}/{best_fmaps_fname}', {'fmaps': train_fmaps_all}) 
 scipy.io.savemat(f'{test_save_dir}/{best_fmaps_fname}', {'fmaps': test_fmaps_all})

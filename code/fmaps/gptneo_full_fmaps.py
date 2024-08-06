@@ -20,7 +20,7 @@ args = parser.parse_args()
 DNNetworks = 'gptneo'
 
 print('')
-print(f'>>> Sleemory images feature maps and captions {DNNetworks} <<<')
+print(f'>>> Sleemory images full feature maps {DNNetworks} <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -54,22 +54,38 @@ tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-1.3B")
 # Extract capt features
 # =============================================================================
 
-fmaps = None
-for capt in tqdm(capts):                       
+# Initialize the dict of fmaps
+fmaps = {}  
+fmaps['layer_0_embeddings'] = []
+for idx in range(model.config.num_layers):
+    attention_type = model.config.attention_layers[idx]
+    fmaps[f'layer_{idx+1}_{attention_type}'] = []
+
+# Iterate over captions
+for icapt, capt in enumerate(tqdm(capts)):                       
     input = tokenizer(capt, return_tensors="pt")
     with torch.no_grad():
-         outputs = model(**input, output_hidden_states=True)
-         hidden_states = outputs.hidden_states
-         # Choose the last layer and take the avg across capt strings
-         feat = np.squeeze(torch.mean(hidden_states[-1], axis=1))
-         if fmaps == None:
-             fmaps = feat
-         else:
-             fmaps = torch.vstack((fmaps, feat)) # (num_img, num_feat)
-print(fmaps.shape)
+        outputs = model(**input, output_hidden_states=True)
+        hidden_states = outputs.hidden_states
+
+        for ilayer, layer in enumerate(hidden_states):
+            if ilayer != 0:
+                attention_type = model.config.attention_layers[ilayer-1]
+            feat = torch.mean(layer, axis=1).numpy() # take the avg across capt strings
+            
+            if icapt == 0:
+                if ilayer == 0:
+                    fmaps[f'layer_{ilayer}_embeddings'] = feat
+                else:
+                    fmaps[f'layer_{ilayer}_{attention_type}'] = feat
+            else:
+                if ilayer == 0:
+                    fmaps[f'layer_{ilayer}_embeddings'] = np.concatenate((fmaps[f'layer_{ilayer}_embeddings'], feat), axis=0)
+                else:
+                    fmaps[f'layer_{ilayer}_{attention_type}'] = np.concatenate((fmaps[f'layer_{ilayer}_{attention_type}'], feat), axis=0) 
 
 # Save feature maps
-save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps'
+save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/GPTNeo'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': fmaps}) 
+scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', fmaps) 

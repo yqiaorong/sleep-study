@@ -11,6 +11,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--layer_start_idx', default=None, type=int)
+parser.add_argument('--layer_idx_num',   default=None, type=int)
 parser.add_argument('--num_feat',        default=3000, type=int)
 parser.add_argument('--whiten',          default=False,type=bool)
 args = parser.parse_args()
@@ -64,7 +65,7 @@ del sample_fmaps
 
 # Set the layer chunk size
 layer_start_idx = args.layer_start_idx
-layer_end_idx = min(layer_start_idx+50, len(layers))
+layer_end_idx = min(layer_start_idx+args.layer_idx_num, len(layers))
 print(layer_start_idx, layer_end_idx)
 
 
@@ -131,3 +132,4 @@ best_fmaps_fname = f'ResNet-best-{args.num_feat}-{layer_start_idx}_{whiten}fmaps
 print(best_fmaps_fname)
 scipy.io.savemat(f'{train_save_dir}/{best_fmaps_fname}', best_train_fmaps_all) 
 scipy.io.savemat(f'{test_save_dir}/{best_fmaps_fname}', best_test_fmaps_all) 
+print('Both train and test fmaps saved.')
