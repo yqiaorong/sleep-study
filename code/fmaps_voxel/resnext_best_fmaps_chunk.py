@@ -107,7 +107,7 @@ for ilayer, layer in enumerate(layers[3:][layer_start_idx:layer_end_idx]):
     retri_fmaps_layer = np.empty((retri_fmaps_labels.shape[0], sample_fmaps[layer].shape[1]))
     print(retri_fmaps_layer.shape)
     for ifname, fname in enumerate(tqdm(retri_fmaps_labels, desc='concatenate test fmaps per layer')):
-        retri_fmaps = scipy.io.loadmat(retri_fmaps_dir+fname+'_feats.mat')
+        retri_fmaps = scipy.io.loadmat(retri_fmaps_dir+fname+'.mat')
         retri_fmaps_layer[ifname] = retri_fmaps[layer]
         del retri_fmaps
     print(f'Retrieval fmaps shape: {retri_fmaps_layer.shape}')
