@@ -56,7 +56,7 @@ pred_eeg = reg.predict(retrieval_fmaps)
 pred_eeg = pred_eeg.reshape(pred_eeg.shape[0], 58, 363) # (img, ch, time)
 
 # Save
-save_dir = 'output/sleemory_retrieval_vox/pred_eeg'
+save_dir = f'output/sleemory_retrieval_vox/pred_eeg/sub-{args.sub}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 pred_eeg_fname = f'{args.networks}_pred_eeg.mat'

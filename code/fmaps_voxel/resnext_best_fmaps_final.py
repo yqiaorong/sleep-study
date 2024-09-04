@@ -96,10 +96,11 @@ if os.path.isdir(train_save_dir) == False:
 best_fmaps_fname = f'ResNet-best-{args.new_num_feat}_fmaps.mat'
 print(best_fmaps_fname)
 
-# Load training fmaps
+# Load image labels
 img_dir = f'dataset/sleemory_localiser/dnn_feature_maps/full_feature_maps/ResNet/'
 img_list = os.listdir(img_dir)
 img_list = [img.split('.')[0] for img in img_list]
 print(img_list)
+
 scipy.io.savemat(f'{train_save_dir}/{best_fmaps_fname}', {'fmaps': train_fmaps_all,
                                                           'imgs_all': img_list}) 
