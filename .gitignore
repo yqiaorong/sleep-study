@@ -20,5 +20,7 @@ output/sleemory_retrieval/enc_acc
 output/sleemory_retrieval/enc_acc_avg
 output/sleemory_retrieval/test_pred_eeg
 output/sleemory_retrieval/whiten_eeg
+output/sleemory_retrieval_vox/
+output/sleemory_localiser_vox/
 
 code/fmaps/archive

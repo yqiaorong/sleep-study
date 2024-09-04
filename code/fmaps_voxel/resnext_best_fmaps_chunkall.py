@@ -32,7 +32,7 @@ print(f'The number of layers: {num_layers}')
 del sample_fmaps, layers
 
 # Run the script
-layer_idx_num = 50
+layer_idx_num = 20
 layer_start_indices = range(0, num_layers, layer_idx_num)
 
 for idx in layer_start_indices:

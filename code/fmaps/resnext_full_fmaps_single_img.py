@@ -67,6 +67,7 @@ register_hooks(model)
 img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
 img_list = os.listdir(img_dir)
 img_name = img_list[args.img_idx]
+# img_name = 'corridor-95.jpg'
 print(img_name)
 
 # Extract

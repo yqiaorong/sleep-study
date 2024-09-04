@@ -6,6 +6,7 @@ import pickle
 import argparse
 import mat73
 
+
 # =============================================================================
 # Input arguments
 # =============================================================================
@@ -36,9 +37,10 @@ fmaps_data = scipy.io.loadmat(f'output/sleemory_localiser_vox/dnn_feature_maps/b
 fmaps = fmaps_data['fmaps'] # (img, 'num_token', num_feat)
 if args.networks == 'BLIP-2': # Need to select token or mean pooling
     fmaps = np.mean(fmaps, axis=1)
-
+print(fmaps.shape)
 ### load labels ###
-fmap_labels = fmaps['imgs_all']
+fmap_labels = np.char.rstrip(fmaps_data['imgs_all'])
+print(fmap_labels)
 
 # =============================================================================
 # Load the EEG data
@@ -54,16 +56,15 @@ eeg = np.reshape(eeg, (eeg.shape[0], -1)) # (img, ch x time)
 eeg_labels = eeg_data['sub_eeg_loc']['images']
 eeg_labels = [s[0].split('.')[0] for s in eeg_labels]
 eeg_labels = np.asarray(eeg_labels)
-
+print(eeg_labels)
 del eeg_data
 
 # Check the order of two labels
-print(eeg_labels == fmap_labels)
-
-if eeg_labels == fmap_labels == False:
+if np.all(eeg_labels == fmap_labels) == False:
 	reorder_fmaps = np.empty(fmaps.shape)
 	for eeg_label in eeg_labels:
 		fmaps_idx = np.where(fmap_labels == eeg_label)[0]
+		# print(fmaps_idx)
 		reorder_fmaps = fmaps[fmaps_idx]
 else:
     reorder_fmaps = fmaps

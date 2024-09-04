@@ -33,7 +33,8 @@ print('')
 capt_df = pd.read_csv(f'dataset/sleemory_{args.dataset}/BLIP-2_captions.csv')
 
 # Re-order captions according to the image order
-img_names = os.listdir(f'dataset/sleemory_{args.dataset}/image_set')
+img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
+img_names = os.listdir(img_dir)
 capts = []
 for name in img_names:
     capts.append(capt_df.loc[capt_df['img_names'] == name]['gen_texts'].iloc[0])
@@ -84,7 +85,7 @@ for icapt, capt in enumerate(tqdm(capts)):
                 else:
                     fmaps[f'layer_{ilayer}_{attention_type}'] = np.concatenate((fmaps[f'layer_{ilayer}_{attention_type}'], feat), axis=0) 
 
-fmaps['imgs_all'] = img_names
+fmaps['imgs_all'] = np.char.rstrip(img_names)
 fmaps['captions'] = capts
 
 # Save feature maps
