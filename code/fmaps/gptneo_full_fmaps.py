@@ -84,6 +84,9 @@ for icapt, capt in enumerate(tqdm(capts)):
                 else:
                     fmaps[f'layer_{ilayer}_{attention_type}'] = np.concatenate((fmaps[f'layer_{ilayer}_{attention_type}'], feat), axis=0) 
 
+fmaps['imgs_all'] = img_names
+fmaps['captions'] = capts
+
 # Save feature maps
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/GPTNeo'
 if os.path.isdir(save_dir) == False:

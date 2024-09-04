@@ -32,18 +32,16 @@ reg = pickle.load(open(f'{model_dir}/{reg_model_fname}', 'rb'))
 ### Load test fmaps ###
 fmaps_fname = f'{args.networks}-best-{args.num_feat}_fmaps.mat'
 print(fmaps_fname)
-fmaps = scipy.io.loadmat(f'output/sleemory_localiser_vox/dnn_feature_maps/{fmaps_fname}')
-print(fmaps.shape)
+fmaps_data = scipy.io.loadmat(f'output/sleemory_localiser_vox/dnn_feature_maps/best_feature_maps/sub_{args.sub}/{fmaps_fname}')
 
-# Load labels
-fmaps_labels = fmaps['imgs_all']
-
-# Load fmaps
-fmaps = fmaps['fmaps'] # (img, 'num_token', num_feat)
+# Load fmaps and labels
+fmaps = fmaps_data['fmaps'] # (img, 'num_token', num_feat)
 if args.networks == 'BLIP-2': # Need to select token or mean pooling
     fmaps = np.mean(fmaps, axis=1)
+fmaps_labels = fmaps_data['imgs_all']
+del fmaps_data
 
-### Load image names 
+### Load retrieval image names 
 img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_retrieval/image_set/'
 img_list = os.listdir(img_dir)
 
@@ -58,9 +56,10 @@ pred_eeg = reg.predict(retrieval_fmaps)
 pred_eeg = pred_eeg.reshape(pred_eeg.shape[0], 58, 363) # (img, ch, time)
 
 # Save
-save_dir = 'output/sleemory_retrieval/pred_eeg'
+save_dir = 'output/sleemory_retrieval_vox/pred_eeg'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-pred_eeg_fname = f'{args.networks}{best_feat_cond}_{whiten}pred_eeg.mat'
+pred_eeg_fname = f'{args.networks}_pred_eeg.mat'
 print(pred_eeg_fname)
-scipy.io.savemat(f'{save_dir}/{pred_eeg_fname}', {'pred_eeg': pred_eeg}) 
+scipy.io.savemat(f'{save_dir}/{pred_eeg_fname}', {'pred_eeg': pred_eeg,
+                                                  'imgs_all': img_list}) 
