@@ -34,8 +34,6 @@ img_prepr = trn.Compose([
 	trn.Normalize([0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-img_dir = f'dataset/sleemory_{args.dataset}/image_set/'
-
 # =============================================================================
 # Load the networks
 # =============================================================================
@@ -66,6 +64,7 @@ def register_hooks(model):
 register_hooks(model)        
 
 # Select img
+img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
 img_list = os.listdir(img_dir)
 img_name = img_list[args.img_idx]
 print(img_name)
@@ -85,6 +84,7 @@ for layer_name, feat_vals in all_feats.items():
 # Convert to numpy array
 final_fmaps = {}
 for i, (layer_name, feat_vals) in enumerate(all_feats.items()):  
+    feat_vals = feat_vals.cpu()
     final_fmaps[layer_name.split('_')[0]+f'_{i}'] = feat_vals.numpy()
 del all_feats
 
@@ -92,4 +92,6 @@ del all_feats
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/{DNNetworks}'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/img_{args.img_idx}.mat', final_fmaps) 
+saved_fname = img_name.split('.')[0]
+print(saved_fname)
+scipy.io.savemat(f'{save_dir}/{saved_fname}_feats.mat', final_fmaps)
