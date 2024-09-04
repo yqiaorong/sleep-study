@@ -13,9 +13,8 @@ import mat73
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--networks', default=None, type=str)
-# If it's Alexnet, specify the layer name
 parser.add_argument('--num_feat', default=None, type=int) 
-parser.add_argument('--sub', default=None, type=int) 
+parser.add_argument('--sub',      default=None, type=int) 
 args = parser.parse_args()
 
 print('')
@@ -35,12 +34,10 @@ fmaps_data = scipy.io.loadmat(f'output/sleemory_localiser_vox/dnn_feature_maps/b
 
 # Load fmaps
 fmaps = fmaps_data['fmaps'] # (img, 'num_token', num_feat)
-if args.networks == 'BLIP-2': # Need to select token or mean pooling
-    fmaps = np.mean(fmaps, axis=1)
 print(fmaps.shape)
-### load labels ###
+
+# load labels
 fmap_labels = np.char.rstrip(fmaps_data['imgs_all'])
-print(fmap_labels)
 
 # =============================================================================
 # Load the EEG data
@@ -56,7 +53,6 @@ eeg = np.reshape(eeg, (eeg.shape[0], -1)) # (img, ch x time)
 eeg_labels = eeg_data['sub_eeg_loc']['images']
 eeg_labels = [s[0].split('.')[0] for s in eeg_labels]
 eeg_labels = np.asarray(eeg_labels)
-print(eeg_labels)
 del eeg_data
 
 # Check the order of two labels
@@ -64,7 +60,6 @@ if np.all(eeg_labels == fmap_labels) == False:
 	reorder_fmaps = np.empty(fmaps.shape)
 	for eeg_label in eeg_labels:
 		fmaps_idx = np.where(fmap_labels == eeg_label)[0]
-		# print(fmaps_idx)
 		reorder_fmaps = fmaps[fmaps_idx]
 else:
     reorder_fmaps = fmaps

@@ -1,8 +1,5 @@
 import os
-import torch
 import argparse
-from tqdm import tqdm
-import pandas as pd
 import numpy as np
 import scipy
 import mat73
@@ -14,7 +11,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_feat',default=1000, type=int)
-parser.add_argument('--sub', default=2, type=int)
+parser.add_argument('--sub',     default=2,    type=int)
 args = parser.parse_args()
 
 print('')

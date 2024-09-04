@@ -11,7 +11,7 @@ import mat73
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--sub', default=2, type=int)
+parser.add_argument('--sub',             default=2,    type=int)
 parser.add_argument('--layer_start_idx', default=None, type=int)
 parser.add_argument('--layer_idx_num',   default=None, type=int)
 parser.add_argument('--num_feat',        default=3000, type=int)
@@ -78,7 +78,8 @@ best_fmaps_all = {}
 retri_best_fmaps_all = {}
 for ilayer, layer in enumerate(layers[3:][layer_start_idx:layer_end_idx]):
     print(layer)
-    
+    print('')
+
     # Load training fmaps of one image
     fmaps_layer = np.empty((fmaps_labels.shape[0], sample_fmaps[layer].shape[1]))
     print(fmaps_layer.shape)
@@ -101,7 +102,6 @@ for ilayer, layer in enumerate(layers[3:][layer_start_idx:layer_end_idx]):
     
     best_fmaps_all[layer] = fmaps_layer
     del fmaps_layer
-    print('')
     
     # Load retrieval fmaps of one image
     retri_fmaps_layer = np.empty((retri_fmaps_labels.shape[0], sample_fmaps[layer].shape[1]))
