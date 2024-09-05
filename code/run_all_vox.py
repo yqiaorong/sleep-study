@@ -2,7 +2,7 @@
 import os
 
 # Specify the subjects 
-subs = range(2, 26)
+subs = [3]
 
 for sub in subs:
 
@@ -11,7 +11,7 @@ for sub in subs:
     # =============================================================================
 
     # Extract the best feature maps
-    os.system(f'python3 code/fmaps_voxel/gptneo_best_fmaps_all_layers.py --sub {sub}')
+    os.system(f'python3 code/fmaps_voxel/gptneo_best_fmaps_all_layer.py --sub {sub}')
 
     # Build the encoding model 
     os.system(f'python3 code/fmaps_voxel/build_enc_model.py --sub {sub} --networks GPTNEO --num_feat 1000')

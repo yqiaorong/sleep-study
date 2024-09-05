@@ -74,6 +74,7 @@ elif args.networks == 'ResNet-fc':
     fmaps = fmaps_data['fmaps']
 
 print(f'fmaps all shape: {fmaps.shape}')
+fmaps_labels = fmaps_labels.flatten().tolist()
 print(fmaps_labels)
 
 # =============================================================================
@@ -95,6 +96,6 @@ print(pred_eeg.shape)
 save_dir = f'output/sleemory_retrieval_vox/pred_eeg/{args.networks}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-pred_eeg_fname = f'{args.networks}_sub-{args.sub}_pred_eeg.mat'
+pred_eeg_fname = f'{args.networks}_sub-{args.sub:03d}_pred_eeg.mat'
 print(pred_eeg_fname)
 scipy.io.savemat(f'{save_dir}/{pred_eeg_fname}', {'pred_eeg': pred_eeg, 'imgs_all': fmaps_labels}) 
