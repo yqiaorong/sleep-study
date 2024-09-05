@@ -24,7 +24,7 @@ print('')
 
 
 model_dir = f'output/sleemory_localiser_vox/model/'
-if args.networks == 'GPTNEO':
+if args.networks == 'GPTNEO' or args.networks == 'ResNet-fc':
     # =============================================================================
     # Load best feat model
     # =============================================================================
@@ -67,6 +67,12 @@ elif args.networks == 'ResNet':
 
     # Load fmaps
     fmaps = fmaps_data['fmaps']
+    
+elif args.networks == 'ResNet-fc':
+    fmaps_data = scipy.io.loadmat(f'output/sleemory_retrieval_vox/dnn_feature_maps/full_feature_maps/ResNet-fc/ResNet-fc_fmaps.mat')
+    fmaps_labels = np.char.rstrip(fmaps_data['imgs_all'])
+    fmaps = fmaps_data['fmaps']
+
 print(f'fmaps all shape: {fmaps.shape}')
 print(fmaps_labels)
 
@@ -74,7 +80,7 @@ print(fmaps_labels)
 # Prediction 
 # =============================================================================
 
-if args.networks == 'GPTNEO':
+if args.networks == 'GPTNEO' or args.networks == 'ResNet-fc':
     # Select the best image features
     fmaps = freg.transform(fmaps)
     print(fmaps.shape)
