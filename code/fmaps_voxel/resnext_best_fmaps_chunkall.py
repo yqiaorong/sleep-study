@@ -36,5 +36,8 @@ layer_idx_num = 20
 layer_start_indices = range(0, num_layers, layer_idx_num)
 
 for idx in layer_start_indices:
-    os.system(f'python code/fmaps_voxel/resnext_best_fmaps_chunk.py'+
-              f' --layer_start_idx {idx} --layer_idx_num {layer_idx_num} --num_feat {args.num_feat} --sub {args.sub}')
+    if not os.path.exists(f'output/sleemory_retrieval_vox/dnn_feature_maps/best_feature_maps/sub_{args.sub}/ResNet/ResNet-best-{args.num_feat}-{idx}_fmaps.mat'):
+        os.system(f'python code/fmaps_voxel/resnext_best_fmaps_chunk.py'+
+                  f' --layer_start_idx {idx} --layer_idx_num {layer_idx_num} --num_feat {args.num_feat} --sub {args.sub}')
+    else:
+         print(f'idx {idx} exists.')
