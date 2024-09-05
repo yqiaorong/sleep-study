@@ -55,7 +55,7 @@ def hook_fn(module, input, output):
 model.fc.register_forward_hook(hook_fn)
 
 # Extract
-img_dir = f'dataset/sleemory_{args.dataset}/image_set/'
+img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
 fmaps = None
 for img_name in tqdm(os.listdir(img_dir)):
     img = Image.open(os.path.join(img_dir, img_name)).convert('RGB')
@@ -70,7 +70,7 @@ for img_name in tqdm(os.listdir(img_dir)):
         fmaps = fc_output
     else:
         fmaps = torch.vstack((fmaps, fc_output)) # (num_img, num_feat 1000)
-
+fmaps = fmaps.cpu()
 # Save feature maps
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/{DNNetworks}/'
 if os.path.isdir(save_dir) == False:
