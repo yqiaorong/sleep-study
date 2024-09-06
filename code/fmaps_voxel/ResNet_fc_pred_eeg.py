@@ -1,51 +1,54 @@
-import pickle
 import os
-import scipy
-import argparse
+import scipy.io
 import numpy as np
+import pickle
+import argparse
 
 # =============================================================================
 # Input arguments
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--networks', default=None, type=str)
-parser.add_argument('--num_feat', default=1000, type=int)
-parser.add_argument('--sub',      default=None,    type=int) 
+parser.add_argument('--sub', default=None, type=int) 
 args = parser.parse_args()
 
+networks = 'ResNet-fc'
+
 print('')
-print(f'>>> Predict EEG from the encoding model ({args.networks}) <<<')
+print(f'>>> Predict EEG ({networks}) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
 print('')
-
+ 
 # =============================================================================
-# Load the encoding model
+# Load encoding model
 # =============================================================================
 
-model_dir = f'output/sleemory_localiser_vox/model/'
-reg_model_fname = f'{args.networks}_reg_model.pkl'
+reg_model_fname = f'{networks}_reg_model.pkl'
 print(reg_model_fname)
-reg = pickle.load(open(f'{model_dir}/reg_model/sub-{args.sub}/{reg_model_fname}', 'rb'))
+model_dir = f'output/sleemory_localiser_vox/model/reg_model/sub-{args.sub}/'
+reg = pickle.load(open(f'{model_dir}/{reg_model_fname}', 'rb'))
 
 # =============================================================================
-# Load the test fmaps
+# Load the retrieval fmaps (checked)
 # =============================================================================
 
-fmaps_data = scipy.io.loadmat(f'output/sleemory_retrieval_vox/dnn_feature_maps/best_feature_maps/sub_{args.sub}/{args.networks}-best-{args.num_feat}_fmaps.mat')
+fmaps_fname = f'{networks}_fmaps.mat'
+print(fmaps_fname)
+fmaps_path = f'dataset/sleemory_retrieval/dnn_feature_maps/full_feature_maps/{networks}/{fmaps_fname}'
+print(fmaps_path)
+fmaps_data = scipy.io.loadmat(fmaps_path)
+print('fmaps successfully loaded')
 
-# Load labels
-fmaps_labels = np.char.rstrip(fmaps_data['imgs_all'])
-print(fmaps_labels)
-print(fmaps_labels.shape)
-# fmaps_labels = fmaps_labels.flatten().tolist()
-# print(fmaps_labels)
-
-# Load fmaps
-fmaps = fmaps_data['fmaps']
+# Load fmaps 
+fmaps = fmaps_data['fmaps'] # (img, 'num_token', num_feat)
 print(fmaps.shape)
+
+# load labels (contains .jpg)
+fmap_labels = np.char.rstrip(fmaps_data['imgs_all'])
+print(fmap_labels.shape)
+print(fmap_labels)
 
 # =============================================================================
 # Prediction 
@@ -59,10 +62,10 @@ print(pred_eeg.shape)
 # Save
 # =============================================================================
 
-save_dir = f'output/sleemory_retrieval_vox/pred_eeg/{args.networks}/'
+save_dir = f'output/sleemory_retrieval_vox/pred_eeg/{networks}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-pred_eeg_fname = f'{args.networks}_sub-{args.sub:03d}_pred_eeg.mat'
+pred_eeg_fname = f'{networks}_sub-{args.sub:03d}_pred_eeg.mat'
 print(f'{pred_eeg_fname} is saved in folder: {save_dir}')
 scipy.io.savemat(f'{save_dir}/{pred_eeg_fname}', {'pred_eeg': pred_eeg, 
-												  'imgs_all': fmaps_labels}) 
+												  'imgs_all': fmap_labels}) 
