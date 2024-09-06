@@ -2,7 +2,7 @@
 import os
 
 # Specify the subjects 
-subs = [3]
+subs = [2]
 
 for sub in subs:
 

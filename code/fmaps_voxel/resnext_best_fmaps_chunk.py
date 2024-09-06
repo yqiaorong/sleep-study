@@ -17,8 +17,10 @@ parser.add_argument('--layer_idx_num',   default=None, type=int)
 parser.add_argument('--num_feat',        default=3000, type=int)
 args = parser.parse_args()
 
+networks = 'ResNet'
+
 print('')
-print(f'>>> Feature selection of sleemory images feature maps (resnext) for chunk layers <<<')
+print(f'>>> Feature selection of sleemory images feature maps ({networks}) for chunk layers <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -44,7 +46,7 @@ eeg_labels = np.asarray(eeg_labels)
 eeg = np.mean(eeg, -1)
 # Average across channel to shape (img,)
 eeg = np.mean(eeg, -1)
-print('Training (localiser) EEG data shape (img,)', eeg.shape)
+print('(localiser) EEG data shape (img,)', eeg.shape)
 del eeg_data
 
 # =============================================================================
@@ -52,14 +54,15 @@ del eeg_data
 # =============================================================================
 
 # Load localiser fmaps
-fmaps_dir = f'dataset/sleemory_localiser/dnn_feature_maps/full_feature_maps/ResNet/'
+fmaps_dir = f'dataset/sleemory_localiser/dnn_feature_maps/full_feature_maps/{networks}/'
 fmaps_labels = eeg_labels
 
 # Load retrieval fmaps
-retri_fmaps_dir = f'dataset/sleemory_retrieval/dnn_feature_maps/full_feature_maps/ResNet/'
+retri_fmaps_dir = f'dataset/sleemory_retrieval/dnn_feature_maps/full_feature_maps/{networks}/'
 retri_fmaps_labels = os.listdir(retri_fmaps_dir)
-retri_fmaps_labels = [s.split('.')[0] for s in retri_fmaps_labels]
+# retri_fmaps_labels = [s.split('.')[0] for s in retri_fmaps_labels]
 retri_fmaps_labels = np.asarray(retri_fmaps_labels)
+print(retri_fmaps_labels)
 
 
 

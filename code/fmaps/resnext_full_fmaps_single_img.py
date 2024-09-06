@@ -12,7 +12,7 @@ import scipy
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default=None, type=str)
-parser.add_argument('--img_idx', default=None, type=int)
+parser.add_argument('--img_name', default=None, type=str)
 args = parser.parse_args()
 
 DNNetworks = 'ResNet'
@@ -65,9 +65,7 @@ register_hooks(model)
 
 # Select img
 img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
-img_list = os.listdir(img_dir)
-img_name = img_list[args.img_idx]
-# img_name = 'corridor-95.jpg'
+img_name = args.img_name
 print(img_name)
 
 # Extract

@@ -2,7 +2,7 @@ import os
 import scipy
 import numpy as np
 from tqdm import tqdm
-# from func import mvnn
+from func import mvnn
 import argparse
 import mat73
 import pickle
@@ -13,7 +13,6 @@ from scipy import stats
 # =============================================================================
 parser = argparse.ArgumentParser()
 parser.add_argument('--sub', default=2, type=int)
-parser.add_argument('--whiten', default=False, type=bool)
 args = parser.parse_args()
 
 print('')
@@ -30,73 +29,80 @@ print('')
 # Load the test EEG data directory
 eeg_dir = '/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset/sleemory_localiser/preprocessed_data'
 
-fname = f'sub-{args.sub:03d}_task-localiser_source_data'
-data = mat73.loadmat(os.path.join(eeg_dir, fname+'.mat'))
-prepr_data = data['sub_eeg_loc']['eeg']
+eeg_fname = f'sub-{args.sub:03d}_task-localiser_source_data'
+eeg_data = mat73.loadmat(os.path.join(eeg_dir, eeg_fname+'.mat'))
+eeg = eeg_data['sub_eeg_loc']['eeg']
+print('Original eeg_data shape (trial, ch, time)', eeg.shape)
 
-imgs_all = data['sub_eeg_loc']['images']
-imgs_all = [s[0].split('.')[0] for s in imgs_all]
-imgs_all = np.asarray(imgs_all)
-
-print('Original eeg_data shape (trial, ch, time)', prepr_data.shape)
+eeg_labels = eeg_data['sub_eeg_loc']['images']
 
 # set channels
-num_vox = prepr_data.shape[1]
+num_vox = eeg.shape[1]
 
 # set time
-t_sleemory = prepr_data.shape[2]
+t_sleemory = eeg.shape[2]
 
 # =============================================================================
 # Categorize the preprocessed data
 # =============================================================================
 
-# # Find indices in A that match the first element of B
-# imgs_all = [s[0].split('-')[0] for s in imgs_all]
-# imgs_all = np.asarray(imgs_all)
-# unique_imgs = np.unique(imgs_all)
-
-# # Sort the test eeg data
-# tot_img_indices = []
-# tot_test_eeg = [] # storing all EEG for each img
-# # Iterate over images
-# for idx, img in enumerate(tqdm(unique_imgs, desc='unique images')):
-#     img_indices = np.where(imgs_all == img)[0]
-#     tot_img_indices.append(img_indices)
-
-#     # select corresponding prepr data
-#     select_data = prepr_data[img_indices]
-#    stats.zscore(tot_test_eeg[:,:,t], axis =0) 
-#     # standardize
 # Find indices in A that match the first element of B
-# imgs_all = [s[0].split('-')[0] for s in imgs_all]
-# imgs_all = np.asarray(imgs_all)
-# unique_imgs = np.unique(imgs_all)
-#     # Append data
-#     tot_test_eeg.append(select_data)
-#     print(select_data.shape)
+eeg_labels  = [s[0].split('-')[0] for s in eeg_labels] # no .jpg and idx
+eeg_labels = np.asarray(eeg_labels)
+print(eeg_labels)
+unique_imgs = np.unique(eeg_labels)
+print(unique_imgs.shape)
 
-# Z score the data
-zscored_data = np.empty(prepr_data.shape)
-if args.whiten == True:
-    # tot_test_eeg = mvnn(tot_test_eeg)
-    for t in tqdm(range(t_sleemory), desc='time'):
-        for vox in range(num_vox):
-            zscored_data[:, vox, t] =  stats.zscore(prepr_data[:,vox,t], axis = 0) 
+# Sort the test eeg data
+tot_img_indices = []
+tot_eeg = [] # storing all EEG for each category
+# Iterate over images
+for idx, img in enumerate(tqdm(unique_imgs, desc='unique images')):
+    img_indices = np.where(eeg_labels == img)[0]
+    print(img_indices)
+    tot_img_indices.append(img_indices)
+    
+    print(img)
+    print(eeg_labels[img_indices])
 
-# # Assign the whitened data back in original order
-# whitened_data_re = np.empty(prepr_data.shape) 
-# for indices, test_eeg in zip(tot_img_indices, tot_test_eeg):
-#     whitened_data_re[indices] = test_eeg
-# print(f'Total eeg_data shape after whiten ({args.whiten}) (img, ch, time)', whitened_data_re.shape)
+    # select corresponding prepr data
+    select_eeg = eeg[img_indices]
+    print(select_eeg.shape)
+
+    tot_eeg.append(select_eeg)
+
+# =============================================================================
+# Whitening 
+# =============================================================================
+
+whiten_data = mvnn(tot_eeg)
+del tot_eeg
+
+# Assign the whitened data back in original order
+whitened_data_re = np.empty(eeg.shape) 
+for indices, data in zip(tot_img_indices, whiten_data):
+    whitened_data_re[indices] = data
+print(f'Total eeg_data shape after whiten (img, ch, time)', whitened_data_re.shape)
 
 # # Average z scored total test eeg data
-# test_eeg = np.empty((len(unique_imgs), num_vox, t_sleemory))
-# for i, data in enumerate(tot_test_eeg):
+# whitened_data_unique = np.empty((len(unique_imgs), num_vox, t_sleemory))
+# for i, data in enumerate(whiten_data):
 #     new_data = np.mean(data, axis=0)
-#     test_eeg[i] = new_data
-# print(f'Unique eeg_data shape after whiten ({args.whiten}) (img, ch, time)', test_eeg.shape)
+#     whitened_data_unique[i] = new_data
+# print(f'Unique eeg_data shape after whiten ({args.whiten}) (img, ch, time)', whitened_data_unique.shape)
 
-# del tot_test_eeg
+del whiten_data
+
+# =============================================================================
+# Z score the data
+# =============================================================================
+
+# zscored_data = np.empty(eeg.shape)
+# if args.whiten == True:
+#     # tot_test_eeg = mvnn(tot_test_eeg)
+#     for t in tqdm(range(t_sleemory), desc='time'):
+#         for vox in range(num_vox):
+#             zscored_data[:, vox, t] = stats.zscore(eeg[:,vox,t], axis = 0) 
 
 # =============================================================================
 # Save the test eeg data
@@ -107,12 +113,7 @@ save_dir = f'output/sleemory_localiser_vox/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
-if args.whiten == True:
-    fname_insert = 'whiten_'
-else:
-    fname_insert = ''
-np.save(os.path.join(save_dir, fname), {#f'{fname_insert}eeg_unique': test_eeg, 
-#                                                 'unique_img': unique_imgs,
-                                                f'{fname_insert}eeg': zscored_data, 
-                                                'imgs_all': imgs_all})
-pickle.dump
+# np.save(os.path.join(save_dir, eeg_fname), {'eeg': whitened_data_re, 
+#                                             'images': eeg_labels})
+scipy.io.savemat(os.path.join(save_dir, eeg_fname), {'eeg': whitened_data_re, 
+                                                     'images': eeg_labels})
