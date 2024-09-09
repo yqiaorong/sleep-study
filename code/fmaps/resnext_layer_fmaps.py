@@ -71,11 +71,11 @@ for img_name in os.listdir(img_dir):
         output = model(input_batch)
         
     # Access the FC layer features
-    fc_output = all_feats['fc']   
+    layer_output = all_feats[args.layer_name]   
     if fmaps is None:
-        fmaps = fc_output
+        fmaps = layer_output
     else:
-        fmaps = torch.vstack((fmaps, fc_output)) # (num_img, num_feat 1000)
+        fmaps = torch.vstack((fmaps, layer_output)) # (num_img, num_feat 1000)
 fmaps = fmaps.cpu()
 
 # Save feature maps
