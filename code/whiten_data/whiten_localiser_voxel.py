@@ -7,6 +7,8 @@ import argparse
 import mat73
 import pickle
 from scipy import stats
+import mat73
+import h5py
 
 # =============================================================================
 # Input arguments
@@ -35,6 +37,7 @@ eeg = eeg_data['sub_eeg_loc']['eeg']
 print('Original eeg_data shape (trial, ch, time)', eeg.shape)
 
 eeg_labels = eeg_data['sub_eeg_loc']['images']
+original_eeg_labels = eeg_labels # with .jpg
 
 # set channels
 num_vox = eeg.shape[1]
@@ -49,7 +52,6 @@ t_sleemory = eeg.shape[2]
 # Find indices in A that match the first element of B
 eeg_labels  = [s[0].split('-')[0] for s in eeg_labels] # no .jpg and idx
 eeg_labels = np.asarray(eeg_labels)
-print(eeg_labels)
 unique_imgs = np.unique(eeg_labels)
 print(unique_imgs.shape)
 
@@ -113,6 +115,7 @@ save_dir = f'output/sleemory_localiser_vox/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
-scipy.io.savemat(os.path.join(save_dir, eeg_fname), 
-                 {'sub_eeg_loc': {'eeg': whitened_data_re, 
-                                  'images': eeg_labels}})
+with open(os.path.join(save_dir, eeg_fname+'.pkl'), 'wb') as f:
+    pickle.dump({'sub_eeg_loc': {'eeg': whitened_data_re, 
+                                 'images': original_eeg_labels}},
+                f)

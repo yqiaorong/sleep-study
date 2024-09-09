@@ -6,6 +6,7 @@ from sklearn.linear_model import LinearRegression
 import argparse
 import mat73
 from tqdm import tqdm
+from sklearn.preprocessing import StandardScaler
 
 # =============================================================================
 # Input arguments
@@ -13,35 +14,51 @@ from tqdm import tqdm
 
 networks = 'ResNet-fc'
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--vox_idx', default=0, type=int)
-# args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument('--whiten', default=True, type=bool)
+args = parser.parse_args()
 
 print('')
 print(f'>>> Train the encoding model ({networks}) per voxel <<<')
 print('\nInput arguments:')
-# for key, val in vars(args).items():
-# 	print('{:16} {}'.format(key, val))
-# print('')
+for key, val in vars(args).items():
+	print('{:16} {}'.format(key, val))
+print('')
 
 # =============================================================================
 # Func
 # =============================================================================
 
-def load_eeg_to_train_enc(sub):
-	eeg_dir = '/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset/sleemory_localiser/preprocessed_data'
-
+def load_eeg_to_train_enc(sub, whiten = False):
+	import pickle
 	eeg_fname = f'sub-{sub:03d}_task-localiser_source_data'
-	eeg_data = mat73.loadmat(os.path.join(eeg_dir, eeg_fname+'.mat'))
-	eeg = eeg_data['sub_eeg_loc']['eeg'].astype(np.float32)
-	print(f'Initial eeg shape {eeg.shape}')
-	# eeg_vox = np.squeeze(eeg[:, vox_idx, :])
-	# print(f'Initial eeg vox shape {eeg_vox.shape}')
+	if whiten==False:
+		eeg_dir = '/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset/sleemory_localiser/preprocessed_data/'
+		
+		eeg_data = mat73.loadmat(os.path.join(eeg_dir, eeg_fname+'.mat'))
+		eeg = eeg_data['sub_eeg_loc']['eeg'].astype(np.float32)
+		print(f'Initial eeg shape {eeg.shape}')
+		# eeg_vox = np.squeeze(eeg[:, vox_idx, :])
+		# print(f'Initial eeg vox shape {eeg_vox.shape}')
 
-	eeg_labels = eeg_data['sub_eeg_loc']['images']
-	eeg_labels = [s[0] for s in eeg_labels]
-	eeg_labels = np.asarray(eeg_labels)
-	del eeg_data
+		eeg_labels = eeg_data['sub_eeg_loc']['images']
+		eeg_labels = [s[0] for s in eeg_labels]
+		eeg_labels = np.asarray(eeg_labels)
+		del eeg_data
+	else:
+		eeg_dir = 'output/sleemory_localiser_vox/whiten_eeg/'
+		with open(os.path.join(eeg_dir, eeg_fname+'.pkl'), 'rb') as f:
+			eeg_data = pickle.load(f)
+
+			eeg = eeg_data['sub_eeg_loc']['eeg'].astype(np.float32)
+			print(f'Initial eeg shape {eeg.shape}')
+		
+			# eeg = eeg_data['sub_eeg_loc/eeg']
+			# eeg_labels = eeg_data['sub_eeg_loc/images']
+			eeg_labels = eeg_data['sub_eeg_loc']['images']
+			eeg_labels = [s[0] for s in eeg_labels]
+			eeg_labels = np.asarray(eeg_labels)
+			# print(eeg_labels)
 
 	return eeg, eeg_labels
 
@@ -103,14 +120,15 @@ all_subs_eeg = {}
 all_subs_eeg_labels = {}
 
 # Load all eegs
-for sub in range(2, 27):
+sub_start, sub_end = 2, 3
+for sub in range(sub_start, sub_end):
 	
 	if sub == 17:
 		pass
 	else:
         # Load eeg
 		print(f'sub {sub}')
-		eeg, eeg_labels = load_eeg_to_train_enc(sub)
+		eeg, eeg_labels = load_eeg_to_train_enc(sub, whiten=args.whiten)
 	    
 		all_subs_eeg[f'sub_{sub}'] = eeg
 		all_subs_eeg_labels[f'sub_{sub}'] = eeg_labels
@@ -121,9 +139,9 @@ for sub in range(2, 27):
 
 tot_pred_eeg = []
 num_vox = 3294
-for vox_idx in tqdm(range(num_vox)):
+for vox_idx in tqdm(range(num_vox), desc='voxelwise encoding'):
 	# print(f'vox {vox_idx}:')
-	for sub in range(2, 27):
+	for sub in range(sub_start, sub_end):
 		if sub == 17:
 			pass
 		else:
@@ -155,6 +173,12 @@ for vox_idx in tqdm(range(num_vox)):
 	# =============================================================================
 
 	# print('Train the encoding model...')
+	
+    # Standardization
+	scalar = StandardScaler()
+	tot_reorder_fmaps = scalar.fit_transform(tot_reorder_fmaps)
+	retri_fmaps  = scalar.transform(retri_fmaps)
+    
 	# Build the model
 	reg = LinearRegression().fit(tot_reorder_fmaps, tot_eeg_vox)
 
@@ -168,7 +192,7 @@ tot_pred_eeg = np.array(tot_pred_eeg).swapaxes(0, 1)
 # print(tot_pred_eeg.shape)
 
 # save pred eeg
-save_dir = 'output/sleemory_retrieval_vox/pred_eeg_voxelwise/'
+save_dir = f'output/sleemory_retrieval_vox/pred_eeg_voxelwise_whiten{args.whiten}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 # np.save(save_dir+f'ResNet_fc_pred_eeg', {'pred_eeg': tot_pred_eeg,

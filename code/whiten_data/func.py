@@ -46,10 +46,10 @@ def mvnn(all_epoched_data):
         S_inv = np.diag(1.0 / np.sqrt(S)) # Inverse sqrt of the diagonal matrix
         Output = U @ S_inv @ V
         return Output
-    # M1
-    sigma_inv = scipy.linalg.fractional_matrix_power(mean_sigma, -0.5)
+    # M1 (might produce imaginary values)
+    # sigma_inv = scipy.linalg.fractional_matrix_power(mean_sigma, -0.5)
     # M2
-    # sigma_inv = compt_inv_sqrt(mean_sigma)
+    sigma_inv = compt_inv_sqrt(mean_sigma)
     print(sigma_inv)
     print('')
     ### Whiten the data ###
