@@ -114,7 +114,6 @@ for sub in range(2, 27):
 	    
 		all_subs_eeg[f'sub_{sub}'] = eeg
 		all_subs_eeg_labels[f'sub_{sub}'] = eeg_labels
-print(all_subs_eeg[f'sub_2'])
 
 # =============================================================================
 # Iterate over voxels
