@@ -39,11 +39,17 @@ def mvnn(all_epoched_data):
     tot_sigma  = np.array(tot_sigma)
     mean_sigma = np.mean(tot_sigma, axis=0)
     print(mean_sigma)
-
-    # mean_sigma = np.round(mean_sigma, 11)
     
-    # Compute the inverse of the covariance matrix
+    ### Compute the inverse of the covariance matrix ###
+    def compt_inv_sqrt(Input):
+        U, S, V = np.linalg.svd(Input)
+        S_inv = np.diag(1.0 / np.sqrt(S)) # Inverse sqrt of the diagonal matrix
+        Output = U @ S_inv @ V
+        return Output
+    # M1
     sigma_inv = scipy.linalg.fractional_matrix_power(mean_sigma, -0.5)
+    # M2
+    # sigma_inv = compt_inv_sqrt(mean_sigma)
     print(sigma_inv)
     print('')
     ### Whiten the data ###
