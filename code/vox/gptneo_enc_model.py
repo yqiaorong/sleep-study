@@ -1,3 +1,4 @@
+"""This script train the encoding model per voxel."""
 import os
 import scipy.io
 import numpy as np
@@ -5,16 +6,17 @@ from sklearn.linear_model import LinearRegression
 import argparse
 import mat73
 from tqdm import tqdm
+from sklearn.feature_selection import SelectKBest, f_regression
 
 # =============================================================================
 # Input arguments
 # =============================================================================
 
-networks = 'ResNet-fc'
+networks = 'GPTNeo'
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--vox_idx', default=0, type=int)
-# args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument('--num_feat', default=1000, type=int)
+args = parser.parse_args()
 
 print('')
 print(f'>>> Train the encoding model ({networks}) per voxel <<<')
@@ -70,22 +72,24 @@ def customize_fmaps(eeg, eeg_labels, fmaps_all, flabels_all):
 	return reorder_fmaps, np.squeeze(reorder_flabels)
 
 # Load the feature maps
-def load_ResNetfc_fmaps(dataset):
-	fmaps_fname = f'ResNet-fc_fmaps.mat'
-	print(fmaps_fname)
-	fmaps_path = f'dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/ResNet-fc/{fmaps_fname}'
-	print(fmaps_path)
-	fmaps_data = scipy.io.loadmat(fmaps_path)
-	print('fmaps successfully loaded')
+def load_GPTNeo_fmaps(dataset):
+	fmaps_data = scipy.io.loadmat(f'dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/gptneo/gptneo_fmaps.mat')
 
-	# Load fmaps 
-	fmaps = fmaps_data['fmaps'].astype(np.float32) # (img, 'num_token', num_feat)
-	print(fmaps.shape)
+	fmaps_labels = fmaps_data['imgs_all']
+	fmaps_labels = [np.char.rstrip(s) for s in fmaps_labels] # remove extra spacing in strings
+	fmaps_labels = np.array(fmaps_labels)
 
-	# load labels (contains .jpg)
-	fmap_labels = np.char.rstrip(fmaps_data['imgs_all'])
-	print(fmap_labels.shape)
-
+	# fmaps_capts  = fmaps_data['captions']
+	for layer in fmaps_data.keys():
+		print(layer)
+		if layer.startswith('layer'):
+			print(fmaps_data[layer].shape, 'take')
+			if layer == 'layer_0_embeddings':
+				fmaps = fmaps_data[layer]
+			else:
+				fmaps = np.concatenate((fmaps, fmaps_data[layer]), axis=1)
+	print(f'fmaps all shape: {fmaps.shape}')
+	del fmaps_data
 	return fmaps, fmap_labels
 
 # =============================================================================
@@ -93,10 +97,10 @@ def load_ResNetfc_fmaps(dataset):
 # =============================================================================
 
 # Load localiser fmaps
-fmaps, fmap_labels = load_ResNetfc_fmaps('localiser')
+fmaps, fmap_labels = load_GPTNeo_fmaps('localiser')
 
 # Load retrieval fmaps
-retri_fmaps, retri_flabels = load_ResNetfc_fmaps('retrieval')
+retri_fmaps, retri_flabels = load_GPTNeo_fmaps('retrieval')
 
 all_subs_eeg = {}
 all_subs_eeg_labels = {}
@@ -151,21 +155,35 @@ for vox_idx in tqdm(range(num_vox)):
 	# print(tot_reorder_fmaps.shape, tot_reorder_flabels.shape)
 
 	# =============================================================================
+	# Extract the best features
+	# =============================================================================
+    
+    # Build the feature selection model upon localiser fmaps
+	feature_selection = SelectKBest(f_regression, k=args.num_feat)
+
+	# Select the best features of retrieval fmaps
+	best_localiser_fmaps = feature_selection.transform(tot_reorder_fmaps)
+	best_retri_fmaps = feature_selection.transform(retri_fmaps)
+	print(f'The final fmaps selected shape {best_localiser_fmaps.shape}, {best_retri_fmaps.shape}')
+	del tot_reorder_fmaps, retri_fmaps
+    
+	# =============================================================================
 	# Train the encoding model per voxel
 	# =============================================================================
 
-	# print('Train the encoding model...')
+	print('Train the encoding model...')
 	# Build the model
-	reg = LinearRegression().fit(tot_reorder_fmaps, tot_eeg_vox)
+	reg = LinearRegression().fit(best_localiser_fmaps, tot_eeg_vox)
 
 	# Pred eeg per voxel
-	pred_eeg = reg.predict(retri_fmaps)
-	# print(pred_eeg.shape)
+	pred_eeg = reg.predict(best_retri_fmaps)
+	print(pred_eeg.shape)
 
 	tot_pred_eeg.append(pred_eeg)
+	del best_localiser_fmaps, best_retri_fmaps, tot_eeg_vox
 
 tot_pred_eeg = np.array(tot_pred_eeg).swapaxes(0, 1)
-# print(tot_pred_eeg.shape)
+print(tot_pred_eeg.shape)
 
 # save pred eeg
 save_dir = 'output/sleemory_retrieval_vox/pred_eeg_voxelwise/'
@@ -173,5 +191,5 @@ if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 # np.save(save_dir+f'ResNet_fc_pred_eeg', {'pred_eeg': tot_pred_eeg,
 # 										 'imgs_all': retri_flabels})
-scipy.io.savemat(f'{save_dir}/ResNet_fc_pred_eeg.mat', {'pred_eeg': tot_pred_eeg,
-										               'imgs_all': retri_flabels})
+scipy.io.savemat(f'{save_dir}/{networks}_pred_eeg.mat', {'pred_eeg': tot_pred_eeg,
+										                 'imgs_all': retri_flabels})
