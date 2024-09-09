@@ -210,5 +210,5 @@ if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 # np.save(save_dir+f'ResNet_fc_pred_eeg', {'pred_eeg': tot_pred_eeg,
 # 										 'imgs_all': retri_flabels})
-scipy.io.savemat(f'{save_dir}/{networks}_pred_eeg.mat', {'pred_eeg': tot_pred_eeg,
-										                 'imgs_all': retri_flabels})
+scipy.io.savemat(f'{save_dir}/{networks}_pred_eeg_sub-{sub:03d}.mat', {'pred_eeg': tot_pred_eeg,
+										                               'imgs_all': retri_flabels})

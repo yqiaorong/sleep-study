@@ -2,37 +2,28 @@
 import os
 
 # Specify the subjects 
-subs = range(3, 27)
+subs = range(2, 10)
 
-for sub in subs:
-    if sub != 17:
-        os.system(f'python3 code/whiten_data/whiten_localiser_voxel.py --sub {sub}')
+# for sub in subs:
+#     if sub != 17:
+#         os.system(f'python3 code/whiten_data/whiten_localiser_voxel.py --sub {sub}')
 
-        # =============================================================================
-        # GPTNEO per sub per time
-        # =============================================================================
+#         # =============================================================================
+#         # GPTNEO per sub per time
+#         # =============================================================================
 
-        # Extract the best feature maps, build the encoding model and predict EEG
-        os.system(f'python3 code/vox/gptneo_enc_model_time.py --sub {sub}')
+#         # Extract the best feature maps, build the encoding model and predict EEG
+#         os.system(f'python3 code/vox/gptneo_enc_model_time.py --sub {sub}')
 
 # =============================================================================
-# ResNet fc per sub per time
+# ResNet fc and layer4.2.conv3 per sub per time
 # =============================================================================
 
 for sub in subs:
     if sub != 17:
         # Build the encoding model and predict EEG
         os.system(f'python3 code/vox/ResNet_layer_enc_model_time.py --sub {sub} --layer_name fc')
-
-# =============================================================================
-# ResNet layer4.2.conv3' per sub per time
-# =============================================================================
-
-for sub in subs:
-    if sub != 17:
-        # Build the encoding model and predict EEG
         os.system(f'python3 code/vox/ResNet_layer_enc_model_time.py --sub {sub} --layer_name layer4.2.conv3')
-
 
     # # =============================================================================
     # # ResNet
