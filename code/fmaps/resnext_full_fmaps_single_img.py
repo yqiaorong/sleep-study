@@ -54,7 +54,7 @@ print(device)
 all_feats = {}
 def hook_fn(module, input, output):
     layer_name = f"{module.__class__.__name__}_{id(module)}"
-    # print(layer_name)
+    print(layer_name)
     all_feats[layer_name] = output
     
 def register_hooks(model):

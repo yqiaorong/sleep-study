@@ -12,6 +12,7 @@ import scipy
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default=None, type=str)
+parser.add_argument('--layer_name', default=None, type=str)
 args = parser.parse_args()
 
 DNNetworks = 'ResNet-fc'
@@ -51,7 +52,7 @@ model.to(device)
 # Set up the features
 all_feats = {}
 def hook_fn(module, input, output):
-    all_feats['fc'] = output
+    all_feats[args.layer_name] = output
 model.fc.register_forward_hook(hook_fn)
 
 # Extract
@@ -81,5 +82,5 @@ fmaps = fmaps.cpu()
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/{DNNetworks}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/{DNNetworks}_fmaps.mat', {'fmaps': fmaps,
-                                                        'imgs_all': flabels}) 
+scipy.io.savemat(f'{save_dir}/{DNNetworks}_layer-{args.layer}_fmaps.mat', {'fmaps': fmaps,
+                                                                           'imgs_all': flabels}) 
