@@ -142,8 +142,7 @@ for sub in range(sub_start, sub_end):
 
 tot_pred_eeg = []
 num_vox = 3294
-# for vox_idx in tqdm(range(num_vox)):
-for vox_idx in tqdm(range(1978, num_vox)):
+for vox_idx in tqdm(range(num_vox)):
 	# print(f'vox {vox_idx}:')
 	for sub in range(sub_start, sub_end):
 		if sub == 17:

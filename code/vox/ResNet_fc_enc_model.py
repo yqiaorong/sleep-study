@@ -7,16 +7,19 @@ import argparse
 import mat73
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectKBest, f_regression
 
 # =============================================================================
 # Input arguments
 # =============================================================================
 
-networks = 'ResNet-fc'
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--whiten', default=True, type=bool)
+parser.add_argument('--layer_name', default='layer4.2.conv3', type=str) # layer4.2.conv3 / fc
+parser.add_argument('--num_feat', default=1000, type=int)
 args = parser.parse_args()
+
+networks = f'ResNet-{args.layer_name}'
 
 print('')
 print(f'>>> Train the encoding model ({networks}) per voxel <<<')
@@ -88,10 +91,10 @@ def customize_fmaps(eeg, eeg_labels, fmaps_all, flabels_all):
 	return reorder_fmaps, np.squeeze(reorder_flabels)
 
 # Load the feature maps
-def load_ResNetfc_fmaps(dataset):
-	fmaps_fname = f'ResNet-fc_fmaps.mat'
+def load_ResNet_fmaps(dataset, layer_name):
+	fmaps_fname = f'ResNet-{layer_name}_fmaps.mat'
 	print(fmaps_fname)
-	fmaps_path = f'dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/ResNet-fc/{fmaps_fname}'
+	fmaps_path = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/ResNet-{layer_name}/{fmaps_fname}'
 	print(fmaps_path)
 	fmaps_data = scipy.io.loadmat(fmaps_path)
 	print('fmaps successfully loaded')
@@ -105,16 +108,16 @@ def load_ResNetfc_fmaps(dataset):
 	print(fmap_labels.shape)
 
 	return fmaps, fmap_labels
-
+# 
 # =============================================================================
 # Load eegs
 # =============================================================================
 
 # Load localiser fmaps
-fmaps, fmap_labels = load_ResNetfc_fmaps('localiser')
+fmaps, fmap_labels = load_ResNet_fmaps('localiser', args.layer_name)
 
 # Load retrieval fmaps
-retri_fmaps, retri_flabels = load_ResNetfc_fmaps('retrieval')
+retri_fmaps, retri_flabels = load_ResNet_fmaps('retrieval', args.layer_name)
 
 all_subs_eeg = {}
 all_subs_eeg_labels = {}
@@ -169,6 +172,21 @@ for vox_idx in tqdm(range(num_vox), desc='voxelwise encoding'):
 	# print(tot_reorder_fmaps.shape, tot_reorder_flabels.shape)
 
 	# =============================================================================
+	# Extract the best features
+	# =============================================================================
+    
+    # Build the feature selection model upon localiser fmaps
+	tot_eeg_vox_fbest = np.mean(tot_eeg_vox[:,51:], axis=1)
+	feature_selection = SelectKBest(f_regression, k=args.num_feat).fit(tot_reorder_fmaps, tot_eeg_vox_fbest)
+	del tot_eeg_vox_fbest
+
+	# Select the best features of retrieval fmaps
+	best_localiser_fmaps = feature_selection.transform(tot_reorder_fmaps)
+	best_retri_fmaps = feature_selection.transform(retri_fmaps)
+	# print(f'The final fmaps selected shape {best_localiser_fmaps.shape}, {best_retri_fmaps.shape}')
+	del tot_reorder_fmaps
+
+	# =============================================================================
 	# Train the encoding model per voxel
 	# =============================================================================
 
@@ -176,20 +194,21 @@ for vox_idx in tqdm(range(num_vox), desc='voxelwise encoding'):
 	
     # Standardization
 	scalar = StandardScaler()
-	tot_reorder_fmaps = scalar.fit_transform(tot_reorder_fmaps)
-	retri_fmaps  = scalar.transform(retri_fmaps)
+	best_localiser_fmaps = scalar.fit_transform(best_localiser_fmaps)
+	best_retri_fmaps = scalar.transform(best_retri_fmaps)
     
 	# Build the model
-	reg = LinearRegression().fit(tot_reorder_fmaps, tot_eeg_vox)
+	reg = LinearRegression().fit(best_localiser_fmaps, tot_eeg_vox)
 
 	# Pred eeg per voxel
-	pred_eeg = reg.predict(retri_fmaps)
+	pred_eeg = reg.predict(best_retri_fmaps)
 	# print(pred_eeg.shape)
 
 	tot_pred_eeg.append(pred_eeg)
+	del best_localiser_fmaps, best_retri_fmaps, tot_eeg_vox
 
 tot_pred_eeg = np.array(tot_pred_eeg).swapaxes(0, 1)
-# print(tot_pred_eeg.shape)
+print(tot_pred_eeg.shape)
 
 # save pred eeg
 save_dir = f'output/sleemory_retrieval_vox/pred_eeg_voxelwise_whiten{args.whiten}/'
