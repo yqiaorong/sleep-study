@@ -32,7 +32,7 @@ def mvnn(all_epoched_data):
         # Covariance matrix of shape (EEG channels × EEG channels)
         sigma = np.mean([np.cov(data[:,:,t].swapaxes(0,1)) for t in range(num_time)],
                         axis=0)
-        sigma = 0.5 * (sigma + sigma.T)
+        sigma = 0.5 * (sigma + sigma.T) # Ensure the symmetry
         tot_sigma.append(sigma)
         
     # Average the covariance matrices across image conditions

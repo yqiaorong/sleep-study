@@ -113,7 +113,6 @@ save_dir = f'output/sleemory_localiser_vox/whiten_eeg'
 if os.path.isdir(save_dir) == False:
     os.makedirs(save_dir)
 
-# np.save(os.path.join(save_dir, eeg_fname), {'eeg': whitened_data_re, 
-#                                             'images': eeg_labels})
-scipy.io.savemat(os.path.join(save_dir, eeg_fname), {'eeg': whitened_data_re, 
-                                                     'images': eeg_labels})
+scipy.io.savemat(os.path.join(save_dir, eeg_fname), 
+                 {'sub_eeg_loc': {'eeg': whitened_data_re, 
+                                  'images': eeg_labels}})
