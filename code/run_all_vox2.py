@@ -2,7 +2,7 @@
 import os
 
 # Specify the subjects 
-subs = range(3, 27)
+subs = range(8, 27)
 
 for sub in subs:
     if sub != 17:
@@ -15,21 +15,17 @@ for sub in subs:
         # Extract the best feature maps, build the encoding model and predict EEG
         os.system(f'python3 code/vox/gptneo_enc_model_time.py --sub {sub}')
 
-# =============================================================================
-# ResNet fc per sub per time
-# =============================================================================
+        # =============================================================================
+        # ResNet fc per sub per time
+        # =============================================================================
 
-for sub in subs:
-    if sub != 17:
         # Build the encoding model and predict EEG
         os.system(f'python3 code/vox/ResNet_layer_enc_model_time.py --sub {sub} --layer_name fc')
 
-# =============================================================================
-# ResNet layer4.2.conv3' per sub per time
-# =============================================================================
+        # =============================================================================
+        # ResNet layer4.2.conv3' per sub per time
+        # =============================================================================
 
-for sub in subs:
-    if sub != 17:
         # Build the encoding model and predict EEG
         os.system(f'python3 code/vox/ResNet_layer_enc_model_time.py --sub {sub} --layer_name layer4.2.conv3')
 
