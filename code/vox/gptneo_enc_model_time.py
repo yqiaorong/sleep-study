@@ -189,10 +189,10 @@ for t_idx in tqdm(range(num_time), desc='temporal encoding'):
 
 	# print('Train the encoding model...')
 
-	# from sklearn.preprocessing import StandardScaler
-	# scalar = StandardScaler()
-	# best_localiser_fmaps = scalar.fit_transform(best_localiser_fmaps)
-	# best_retri_fmaps = scalar.transform(best_retri_fmaps)
+	from sklearn.preprocessing import StandardScaler
+	scalar = StandardScaler()
+	best_localiser_fmaps = scalar.fit_transform(best_localiser_fmaps)
+	best_retri_fmaps = scalar.transform(best_retri_fmaps)
 	# print(np.isnan(np.any(best_localiser_fmaps)))
 	# print(np.isinf(np.any(best_localiser_fmaps)))
 	# from matplotlib import pyplot as plt
