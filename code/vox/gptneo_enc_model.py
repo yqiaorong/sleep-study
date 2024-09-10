@@ -15,7 +15,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 networks = 'GPTNeo'
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--whiten', default=True, type=bool)
+parser.add_argument('--whiten', default=False, type=bool)
 parser.add_argument('--num_feat', default=1000, type=int)
 args = parser.parse_args()
 

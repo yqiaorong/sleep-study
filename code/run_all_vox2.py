@@ -2,7 +2,7 @@
 import os
 
 # Specify the subjects 
-subs = range(9, 27)
+subs = range(15, 27)
 
 for sub in subs:
     if sub != 17:
