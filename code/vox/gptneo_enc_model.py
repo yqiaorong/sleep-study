@@ -7,6 +7,7 @@ import argparse
 import mat73
 from tqdm import tqdm
 from sklearn.feature_selection import SelectKBest, f_regression
+from func import * 
 
 # =============================================================================
 # Input arguments
@@ -15,6 +16,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 networks = 'GPTNeo'
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--sub', default=None, type=int)
 parser.add_argument('--whiten', default=False, type=bool)
 parser.add_argument('--num_feat', default=1000, type=int)
 args = parser.parse_args()
@@ -25,89 +27,6 @@ print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
 print('')
-
-# =============================================================================
-# Func
-# =============================================================================
-
-def load_eeg_to_train_enc(sub, whiten = False):
-	import pickle
-	eeg_fname = f'sub-{sub:03d}_task-localiser_source_data'
-	if whiten==False:
-		eeg_dir = '/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset/sleemory_localiser/preprocessed_data/'
-		
-		eeg_data = mat73.loadmat(os.path.join(eeg_dir, eeg_fname+'.mat'))
-		eeg = eeg_data['sub_eeg_loc']['eeg'].astype(np.float32)
-		print(f'Initial eeg shape {eeg.shape}')
-		# eeg_vox = np.squeeze(eeg[:, vox_idx, :])
-		# print(f'Initial eeg vox shape {eeg_vox.shape}')
-
-		eeg_labels = eeg_data['sub_eeg_loc']['images']
-		eeg_labels = [s[0] for s in eeg_labels]
-		eeg_labels = np.asarray(eeg_labels)
-		del eeg_data
-	else:
-		eeg_dir = 'output/sleemory_localiser_vox/whiten_eeg/'
-		with open(os.path.join(eeg_dir, eeg_fname+'.pkl'), 'rb') as f:
-			eeg_data = pickle.load(f)
-
-			eeg = eeg_data['sub_eeg_loc']['eeg'].astype(np.float32)
-			print(f'Initial eeg shape {eeg.shape}')
-		
-			# eeg = eeg_data['sub_eeg_loc/eeg']
-			# eeg_labels = eeg_data['sub_eeg_loc/images']
-			eeg_labels = eeg_data['sub_eeg_loc']['images']
-			eeg_labels = [s[0] for s in eeg_labels]
-			eeg_labels = np.asarray(eeg_labels)
-			# print(eeg_labels)
-
-	return eeg, eeg_labels
-
-def customize_fmaps(eeg, eeg_labels, fmaps_all, flabels_all):
-
-	# Check the order of two labels
-	reorder_fmaps = np.empty((eeg.shape[0], fmaps_all.shape[1]))
-	reorder_flabels = []
-
-	for idx, eeg_label in enumerate(eeg_labels):
-		# print(eeg_label)
-		fmaps_idx = np.where(flabels_all == eeg_label)[0]
-		# print(f'fmaps idx: {fmaps_idx}')
-		# print(flabels_all[fmaps_idx])
-		if eeg_label == flabels_all[fmaps_idx]:
-			# print('fmaps idx correct')
-			reorder_fmaps[idx] = fmaps_all[fmaps_idx]
-			reorder_flabels.append(flabels_all[fmaps_idx])
-		else:
-			print('fmaps idx incorrect')
-		# print('')
-	# print(reorder_fmaps.shape, eeg.shape)
-	# print(f'Is there nan in reordered fmaps? {np.isnan(reorder_fmaps).any()}')
-
-	# for idx in range(eeg_labels.shape[0]):
-	# 	print(eeg_labels[idx], reorder_flabels[idx])
-	return reorder_fmaps, np.squeeze(reorder_flabels)
-
-# Load the feature maps
-def load_GPTNeo_fmaps(dataset):
-	fmaps_data = scipy.io.loadmat(f'dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/gptneo/gptneo_fmaps.mat')
-
-	fmaps_labels = fmaps_data['imgs_all']
-	fmaps_labels = [np.char.rstrip(s) for s in fmaps_labels] # remove extra spacing in strings
-	fmaps_labels = np.array(fmaps_labels)
-
-	# fmaps_capts  = fmaps_data['captions']
-	for layer in fmaps_data.keys():
-		print(layer)
-		if layer.startswith('layer'):
-			print(fmaps_data[layer].shape, 'take')
-			if layer == 'layer_0_embeddings':
-				fmaps = fmaps_data[layer]
-			else:
-				fmaps = np.concatenate((fmaps, fmaps_data[layer]), axis=1)
-	print(f'fmaps all shape: {fmaps.shape}')
-	del fmaps_data
-	return fmaps, fmaps_labels
 
 # =============================================================================
 # Load eegs
@@ -123,7 +42,7 @@ all_subs_eeg = {}
 all_subs_eeg_labels = {}
 
 # Load all eegs
-sub_start, sub_end = 2, 3
+sub_start, sub_end = args.sub, args.sub+1
 for sub in range(sub_start, sub_end):
 	
 	if sub == 17:
@@ -143,7 +62,7 @@ for sub in range(sub_start, sub_end):
 tot_pred_eeg = []
 num_vox = 3294
 for vox_idx in tqdm(range(num_vox)):
-# for vox_idx in tqdm(range(1000, 1001)):
+# for vox_idx in tqdm(range(2896, 2897)):
 	# print(f'vox {vox_idx}:')
 	for sub in range(sub_start, sub_end):
 		if sub == 17:
@@ -156,7 +75,7 @@ for vox_idx in tqdm(range(num_vox)):
 			reorder_fmaps, reorder_flabels = customize_fmaps(eeg, eeg_labels, fmaps, fmap_labels)
 		    
 			# Concatenate eeg per voxel
-			if sub == 2:
+			if sub == args.sub:
 				tot_eeg_vox = eeg
 				tot_eeg_labels = eeg_labels
 
@@ -193,30 +112,34 @@ for vox_idx in tqdm(range(num_vox)):
 
 	# print('Train the encoding model...')
 	# Build the model
-	# from sklearn.preprocessing import StandardScaler
+	
+	try:
+		reg = LinearRegression().fit(best_localiser_fmaps, tot_eeg_vox)
 
-	# scalar = StandardScaler()
-	# best_localiser_fmaps = scalar.fit_transform(best_localiser_fmaps)
-	# best_retri_fmaps = scalar.transform(best_retri_fmaps)
+	except np.linalg.LinAlgError as e:
+		print(e)
+		from sklearn.preprocessing import StandardScaler
+		
+		scalar = StandardScaler()
+		best_localiser_fmaps = scalar.fit_transform(best_localiser_fmaps)
+		best_retri_fmaps = scalar.transform(best_retri_fmaps)
 
-	# from matplotlib import pyplot as plt
-	# plt.figure()
-	# plt.hist(best_localiser_fmaps)
-	# plt.show()
-	reg = LinearRegression().fit(best_localiser_fmaps, tot_eeg_vox)
+		reg = LinearRegression().fit(best_localiser_fmaps, tot_eeg_vox)
+		del scalar
 
 	# Pred eeg per voxel
 	pred_eeg = reg.predict(best_retri_fmaps)
 	# print(pred_eeg.shape)
 
 	tot_pred_eeg.append(pred_eeg)
-	del best_localiser_fmaps, best_retri_fmaps, tot_eeg_vox
+	del best_localiser_fmaps, best_retri_fmaps, tot_eeg_vox, 
+	del feature_selection, reg
 
 tot_pred_eeg = np.array(tot_pred_eeg).swapaxes(0, 1)
 print(tot_pred_eeg.shape)
 
 # save pred eeg
-save_dir = f'output/sleemory_retrieval_vox/pred_eeg_voxelwise_whiten{args.whiten}/'
+save_dir = f'output/sleemory_retrieval_vox/pred_eeg_voxelwise_whiten{args.whiten}/{networks}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 # np.save(save_dir+f'ResNet_fc_pred_eeg', {'pred_eeg': tot_pred_eeg,

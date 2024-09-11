@@ -1,4 +1,3 @@
-"""This script train the encoding model per time using PCA."""
 import os
 import scipy.io
 import numpy as np
@@ -6,16 +5,14 @@ from sklearn.linear_model import LinearRegression
 import argparse
 from tqdm import tqdm
 from func import *
-# from sklearn.preprocessing import StandardScaler
-# from sklearn.feature_selection import SelectKBest, f_regression
 
 # =============================================================================
 # Input arguments
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--sub', default=None, type=int)
 parser.add_argument('--whiten', default=False, type=bool)
+parser.add_argument('--num_compo', default=1000, type=int)
 parser.add_argument('--layer_name', default=None, type=str) # layer4.2.conv3 / fc
 args = parser.parse_args()
 
@@ -29,7 +26,7 @@ for key, val in vars(args).items():
 print('')
 
 # =============================================================================
-# Load eegs
+# Load raww fmaps
 # =============================================================================
 
 # Load localiser fmaps
@@ -38,34 +35,49 @@ fmaps, fmap_labels = load_ResNet_fmaps('localiser', args.layer_name)
 # Load retrieval fmaps
 retri_fmaps, retri_flabels = load_ResNet_fmaps('retrieval', args.layer_name)
 
+# =============================================================================
+# Load EEG
+# =============================================================================
+
 all_subs_eeg = {}
 all_subs_eeg_labels = {}
 
-# Load all eegs
-sub_start, sub_end = args.sub, args.sub+1
+sub_start, sub_end = 2, 27
 for sub in range(sub_start, sub_end):
 	
 	if sub == 17:
 		pass
 	else:
-        # Load eeg
+        # Load single EEG
 		print(f'sub {sub}')
 		eeg, eeg_labels = load_eeg_to_train_enc(sub, whiten=args.whiten)
 	    
 		all_subs_eeg[f'sub_{sub}'] = eeg
 		all_subs_eeg_labels[f'sub_{sub}'] = eeg_labels
 
-eeg = all_subs_eeg[f'sub_{args.sub}'] # (trials, voxels)
-eeg_labels = all_subs_eeg_labels[f'sub_{args.sub}']
+# =============================================================================
+# Get all flabels 
+# =============================================================================
 
-# Reorder localiser fmaps
-reorder_fmaps, reorder_flabels = customize_fmaps(eeg, eeg_labels, fmaps, fmap_labels)
+for sub in range(sub_start, sub_end):
+	if sub == 17:
+		pass
+	else:
+		eeg = np.squeeze(all_subs_eeg[f'sub_{sub}'][:, :, 0])
+		eeg_labels = all_subs_eeg_labels[f'sub_{sub}']
 
+		# Reorder localiser fmaps
+		reorder_fmaps, reorder_flabels = customize_fmaps(eeg, eeg_labels, fmaps, fmap_labels)
+		
+		# Concatenate eeg per time
+		if sub == 2:
+			tot_reorder_fmaps = reorder_fmaps
+			tot_reorder_flabels = reorder_flabels
+		else:
+			tot_reorder_fmaps = np.concatenate((tot_reorder_fmaps, reorder_fmaps), axis=0)
+			tot_reorder_flabels = np.concatenate((tot_reorder_flabels, reorder_flabels), axis=0)
 
-tot_eeg             = eeg             # (trials, voxels,)
-tot_eeg_labels      = eeg_labels      # (trials, feats,)
-tot_reorder_fmaps   = reorder_fmaps   # (trials.)
-tot_reorder_flabels = reorder_flabels # (trials.)
+print(tot_reorder_fmaps.shape, tot_reorder_flabels.shape)
 
 # =============================================================================
 # Extract the best features (PCA)
@@ -77,35 +89,51 @@ tot_fmaps = np.concatenate([retri_fmaps, tot_reorder_fmaps], axis=0)
 print(tot_fmaps.shape)
 
 from sklearn.decomposition import PCA
-pca = PCA(n_components=250)
+pca = PCA(n_components=args.num_compo)
 tot_fmaps = pca.fit(tot_fmaps).transform(tot_fmaps)
 print(tot_fmaps.shape)
 
 # =============================================================================
-# Iterate over time
+# Iterate over time 
 # =============================================================================
 
 num_time = 301
 num_vox = 3294
 pred_eeg = np.empty((4, num_vox, num_time))
 for t_idx in tqdm(range(num_time), desc='temporal encoding'):
+    
+	# Get all EEG at each time point
+	for sub in range(sub_start, sub_end):
+		if sub == 17:
+			pass
+		else:
+			eeg = np.squeeze(all_subs_eeg[f'sub_{sub}'][:, :, t_idx])
 
+			# Concatenate eeg per time
+			if sub == 2:
+				tot_eeg_vox = eeg            # (trials, voxels,)
+				tot_eeg_labels = eeg_labels  # (trials, feats,)
+			else:
+				tot_eeg_vox = np.concatenate((tot_eeg_vox, eeg), axis=0)
+				tot_eeg_labels = np.concatenate((tot_eeg_labels, eeg_labels), axis=0)
+      
 	# =============================================================================
 	# Train the encoding model per time
 	# =============================================================================
 
 	# Build the model
-	reg = LinearRegression().fit(tot_fmaps[4:], tot_eeg[:, :, t_idx]) # After the first 4 are localiser fmaps 
+	reg = LinearRegression().fit(tot_fmaps[4:], tot_eeg_vox)
 
 	# Pred eeg per voxel per time
-	pred_eeg[:, :, t_idx] = reg.predict(tot_fmaps[:4])                # The first 4 are retrieval fmaps        
+	pred_eeg[:, :, t_idx] = reg.predict(tot_fmaps[:4])
 	del reg
-
 print(pred_eeg)
 
 # save pred eeg
-save_dir = f'output/sleemory_retrieval_vox/pred_eeg_PCA_whiten{args.whiten}/{networks}/'
+save_dir = f'output/sleemory_retrieval_vox/pred_eeg_PCAall-{args.num_compo}_whiten{args.whiten}/{networks}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/{networks}_pred_eeg_sub-{args.sub:03d}.mat', {'pred_eeg': pred_eeg,
-										                                    'imgs_all': retri_flabels})
+# np.save(save_dir+f'ResNet_fc_pred_eeg', {'pred_eeg': tot_pred_eeg,
+# 										 'imgs_all': retri_flabels})
+scipy.io.savemat(f'{save_dir}/{networks}_pred_eeg.mat', {'pred_eeg': pred_eeg,
+										                'imgs_all': retri_flabels})
