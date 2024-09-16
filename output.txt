@@ -1,0 +1,23 @@
+
+>>> Train the encoding (Ridge) model (ResNet-fc) with PCA <<<
+
+Input arguments:
+sub              2
+whiten           False
+layer_name       fc
+
+ResNet-fc_fmaps.mat
+/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_localiser/dnn_feature_maps/full_feature_maps/ResNet-fc/ResNet-fc_fmaps.mat
+fmaps successfully loaded
+(864, 1000)
+(864,)
+ResNet-fc_fmaps.mat
+/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_retrieval/dnn_feature_maps/full_feature_maps/ResNet-fc/ResNet-fc_fmaps.mat
+fmaps successfully loaded
+(4, 1000)
+(4,)
+sub 2
+Initial eeg shape (690, 3294, 301)
+(694, 1000)
+(694, 250)
+temporal encoding:   0%|          | 0/301 [00:00<?, ?it/s]

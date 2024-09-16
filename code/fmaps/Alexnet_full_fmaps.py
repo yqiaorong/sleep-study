@@ -17,6 +17,7 @@ from torchvision import transforms as trn
 import os
 from tqdm import tqdm
 from PIL import Image
+import scipy
 
 # =============================================================================
 # Input arguments
@@ -92,25 +93,23 @@ centre_crop = trn.Compose([
 # =============================================================================
 
 # The main image directory
-img_set_dir = os.path.join('dataset', args.dataset, 'image_set')
+img_set_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
 image_list = []
 for root, _, files in os.walk(img_set_dir):
 	for file in files:
 		if file.endswith(".jpg") or file.endswith(".JPEG"):
-			image_list.append(os.path.join(root,file))
+			image_list.append(file)
 image_list.sort()
 print(len(image_list))
 
 # Create the saving directory if not existing
-save_dir = os.path.join('dataset', args.dataset, 'dnn_feature_maps',
-						'full_feature_maps','alexnet',
-						'pretrained-'+str(args.pretrained))
+save_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/alexnet/pretrained-{str(args.pretrained)}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 
 # Extract and save the feature maps
-for i, image in enumerate(tqdm(image_list, desc='extract fmaps')):
-	img = Image.open(image).convert('RGB')
+for i, image_name in enumerate(tqdm(image_list, desc='extract fmaps')):
+	img = Image.open(f'{img_set_dir}/{image_name}').convert('RGB')
 	input_img = V(centre_crop(img).unsqueeze(0))
 	if torch.cuda.is_available():
 		input_img=input_img.cuda()
@@ -118,5 +117,6 @@ for i, image in enumerate(tqdm(image_list, desc='extract fmaps')):
 	feats = {}
 	for f, feat in enumerate(x):
 		feats[model.feat_list[f]] = feat.data.cpu().numpy()
-	file_name = 'images_' + format(i+1, '04')
-	np.save(os.path.join(save_dir, file_name), feats) 
+	file_name = image_name[:-4]+'_feats'
+
+	scipy.io.savemat(f'{save_dir}/{file_name}',feats) 

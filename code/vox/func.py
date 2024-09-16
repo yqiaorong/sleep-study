@@ -101,3 +101,21 @@ def load_GPTNeo_fmaps(dataset):
 	print(f'fmaps all shape: {fmaps.shape}')
 	del fmaps_data
 	return fmaps, fmaps_labels
+
+def load_AlexNet_fmaps(dataset, layer):
+	fmaps_fname = f'alexnet-{layer}_PCA_fmaps.mat'
+	print(fmaps_fname)
+	fmaps_path = f'output/sleemory_{dataset}_vox/dnn_feature_maps/{fmaps_fname}'
+	print(fmaps_path)
+	fmaps_data = scipy.io.loadmat(fmaps_path)
+	print('fmaps successfully loaded')
+
+	# Load fmaps 
+	fmaps = fmaps_data['fmaps'].astype(np.float32) # (img, 'num_token', num_feat)
+	print(fmaps.shape)
+
+	# load labels (contains .jpg)
+	fmap_labels = np.char.rstrip(fmaps_data['imgs_all'])
+	print(fmap_labels.shape)
+
+	return fmaps, fmap_labels
