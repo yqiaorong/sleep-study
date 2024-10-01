@@ -49,7 +49,7 @@ all_subs_eeg = {}
 all_subs_eeg_labels = {}
 
 # Load all eegs
-sub_start, sub_end = args.sub, args.sub+1
+sub_start, sub_end = 2, 27
 for sub in range(sub_start, sub_end):
 	
 	if sub == 17:
