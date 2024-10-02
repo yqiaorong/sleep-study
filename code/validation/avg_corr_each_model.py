@@ -10,7 +10,7 @@ args = parser.parse_args()
 
 load_dir = f'output/sleemory_localiser_vox/validation_test/corr_ridge_PCA_whiten{args.whiten}/{args.networks}/'
 fname_format = args.networks+'_corr_trial_sub-{:03d}.npy'
-sub_i, sub_f = 2, 5
+sub_i, sub_f = 2, 27
 fnames = [fname_format.format(sub) for sub in range(sub_i, sub_f) if sub != 17]
 
 num_sub = sub_f - sub_i
