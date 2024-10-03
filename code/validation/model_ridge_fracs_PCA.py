@@ -17,15 +17,20 @@ from matplotlib import pyplot as plt
 # Input arguments
 # =============================================================================
 
-networks = 'mpnet'
-
 parser = argparse.ArgumentParser()
-parser.add_argument('--sub', default=None, type=int)
-parser.add_argument('--whiten', default=False, type=bool)
+parser.add_argument('--networks',  default=None, type=str)
+parser.add_argument('--layer_name',default='',   type=str)
+parser.add_argument('--sub',       default=None, type=int)
+parser.add_argument('--whiten',    default=False,type=bool)
 args = parser.parse_args()
 
+if args.layer_name == '':
+	model_name = args.networks
+else:
+	model_name = args.networks + '-' + args.layer_name
+
 print('')
-print(f'>>> Train the encoding (Ridge) model ({networks}) with PCA per subject <<<')
+print(f'>>> Validation test of the encoding (Ridge) model ({model_name}) with PCA per subject <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -36,7 +41,15 @@ print('')
 # =============================================================================
 
 # Load localiser fmaps
-fmaps, fmap_labels = load_mpnet_fmaps('localiser')
+if args.networks == 'GPTNeo':
+    fmaps, fmap_labels = load_GPTNeo_fmaps('localiser')
+elif args.networks == 'mpnet':
+   fmaps, fmap_labels = load_mpnet_fmaps('localiser')
+elif args.networks == 'Alexnet':
+	fmaps, fmap_labels = load_AlexNet_fmaps('localiser', layer=args.layer)
+	fmap_labels = np.array([item +'.jpg' for item in fmap_labels])
+elif args.networks == 'ResNet':
+    fmaps, fmap_labels = load_ResNet_fmaps('localiser', args.layer_name)
 
 # =============================================================================
 # Load EEG
@@ -127,11 +140,10 @@ for itime in tqdm(range(num_time), desc='Correlations'):
 		corr_trial[ivox, itime] = np.corrcoef(pred_eeg[:, ivox, itime], tot_eeg_test[:, ivox, itime])[0, 1]
 
 # Save corr
-save_dir = f'output/sleemory_localiser_vox/validation_test/corr_ridge_PCA_whiten{args.whiten}/{networks}/'
+save_dir = f'output/sleemory_localiser_vox/validation_test/corr_ridge_PCA_whiten{args.whiten}/{model_name}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-# np.save(f'{save_dir}/{networks}_corr_trial_sub-{args.sub:03d}', corr_trial)
-scipy.io.savemat(f'{save_dir}/{networks}_corr_trial_sub-{args.sub:03d}.mat', {'corr': corr_trial})
+scipy.io.savemat(f'{save_dir}/{model_name}_corr_trial_sub-{args.sub:03d}.mat', {'corr': corr_trial})
 
 # Plot
 plt.figure()
@@ -139,5 +151,5 @@ plt.imshow(corr_trial, aspect='auto', cmap='winter', origin='lower')
 plt.colorbar(label='Corr Coeffs')
 plt.xlabel('Time')
 plt.ylabel('Voxel')
-plt.savefig(f'{save_dir}/{networks}_corr_trial_sub-{args.sub:03d}')
+plt.savefig(f'{save_dir}/{model_name}_corr_trial_sub-{args.sub:03d}')
 plt.close()

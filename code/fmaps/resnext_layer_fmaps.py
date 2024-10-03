@@ -11,8 +11,8 @@ import scipy
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default=None, type=str)
-parser.add_argument('--layer_name', default='layer4.2.conv3', type=str) # layer4.2.conv3 / fc
+parser.add_argument('--dataset',    default=None,      type=str)
+parser.add_argument('--layer_name', default='layer3', type=str) # layer4.2.conv3 / fc
 args = parser.parse_args()
 
 DNNetworks = f'ResNet-{args.layer_name}'
@@ -55,30 +55,38 @@ def hook_fn(module, input, output):
     all_feats[args.layer_name] = output
 if args.layer_name == 'fc':
     model.fc.register_forward_hook(hook_fn)
-elif args.layer_name == 'layer4.2.conv3':
-    model.layer4[-1].conv3.register_forward_hook(hook_fn)
+elif args.layer_name == 'maxpool':
+    model.maxpool.register_forward_hook(hook_fn)
+# elif args.layer_name == 'layer4.2.conv3':
+#     model.layer4[-1].conv3.register_forward_hook(hook_fn)
+elif args.layer_name == 'layer3':
+    model.layer3.register_forward_hook(hook_fn)
+     
 
 # Extract
 fmaps = None
 flabels = []
 
 img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
-for img_name in os.listdir(img_dir):
-    print(img_name)
-    flabels.append(img_name)
 
-    img = Image.open(os.path.join(img_dir, img_name)).convert('RGB')
-    img = img_prepr(img) # transform
-    input_batch = img.unsqueeze(0).to(device) # create a mini-batch as expected by the model
-    with torch.no_grad():
-        output = model(input_batch)
-        
-    # Access the FC layer features
-    layer_output = all_feats[args.layer_name]   
-    if fmaps is None:
-        fmaps = layer_output
-    else:
-        fmaps = torch.vstack((fmaps, layer_output)) # (num_img, num_feat 1000)
+
+for img_name in os.listdir(img_dir):
+    if img_name.endswith(".jpg") or img_name.endswith(".JPEG"):
+        print(img_name)
+        flabels.append(img_name)
+
+        img = Image.open(os.path.join(img_dir, img_name)).convert('RGB')
+        img = img_prepr(img) # transform
+        input_batch = img.unsqueeze(0).to(device) # create a mini-batch as expected by the model
+        with torch.no_grad():
+            output = model(input_batch)
+            
+        # Access the FC layer features
+        layer_output = all_feats[args.layer_name]   
+        if fmaps is None:
+            fmaps = layer_output
+        else:
+            fmaps = torch.vstack((fmaps, layer_output)) # (num_img, num_feat 1000)
 fmaps = fmaps.cpu()
 
 
