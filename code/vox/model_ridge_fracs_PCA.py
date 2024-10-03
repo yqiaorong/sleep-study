@@ -98,9 +98,12 @@ tot_fmaps = np.concatenate([retri_fmaps, tot_reorder_fmaps], axis=0)
 # tot_flabels = np.concatenate(retri_flabels, tot_reorder_flabels)
 print(tot_fmaps.shape)
 
-from sklearn.decomposition import PCA
-pca = PCA(n_components=250)
-tot_fmaps = pca.fit(tot_fmaps).transform(tot_fmaps)
+if args.networks == 'Alexnet':
+	pass 
+else:
+	from sklearn.decomposition import PCA
+	pca = PCA(n_components=250)
+	tot_fmaps = pca.fit(tot_fmaps).transform(tot_fmaps)
 print(tot_fmaps.shape)
 
 # =============================================================================

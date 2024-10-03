@@ -92,9 +92,12 @@ print(tot_reorder_fmaps.shape, tot_reorder_flabels.shape)
 # Extract the best features (PCA)
 # =============================================================================
 
-from sklearn.decomposition import PCA
-pca = PCA(n_components=250)
-tot_reorder_fmaps = pca.fit(tot_reorder_fmaps).transform(tot_reorder_fmaps)
+if args.networks == 'Alexnet':
+	pass
+else:
+	from sklearn.decomposition import PCA
+	pca = PCA(n_components=250)
+	tot_reorder_fmaps = pca.fit(tot_reorder_fmaps).transform(tot_reorder_fmaps)
 print(tot_reorder_fmaps.shape)
 
 # =============================================================================
