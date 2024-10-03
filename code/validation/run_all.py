@@ -3,7 +3,8 @@ networks = 'ResNet'
 layers = ['maxpool', 'layer3']
 # layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8','all']
 
-subs = range(5, 27)
+subs = range(2, 27)
+
 for layer in layers:
     for sub in subs:
         if sub != 17:
