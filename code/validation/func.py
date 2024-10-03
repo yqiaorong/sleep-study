@@ -81,6 +81,22 @@ def load_ResNet_fmaps(dataset, layer_name):
 
 	return fmaps, fmap_labels
 
+def load_mpnet_fmaps(dataset):
+	fmaps_fname = f'mpnet_fmaps.mat'
+	print(fmaps_fname)
+	fmaps_path = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/mpnet/{fmaps_fname}'
+	print(fmaps_path)
+	fmaps_data = scipy.io.loadmat(fmaps_path)
+	print('fmaps successfully loaded')
+
+	# Load fmaps 
+	fmaps = fmaps_data['fmaps'].astype(np.float32) # (img, 'num_token', num_feat)
+	print(fmaps.shape)
+	
+	fmap_labels = fmaps_data['imgs_all'].squeeze()
+	print(fmap_labels.shape)
+	return fmaps, fmap_labels
+
 # Load the feature maps
 def load_GPTNeo_fmaps(dataset):
 	fmaps_data = scipy.io.loadmat(f'dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/gptneo/gptneo_fmaps.mat')

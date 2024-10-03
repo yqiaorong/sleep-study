@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from matplotlib import pyplot as plt
+import scipy.io
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--networks', default=None, type=str)
@@ -9,7 +10,7 @@ parser.add_argument('--whiten', default=False, type=bool)
 args = parser.parse_args()
 
 load_dir = f'output/sleemory_localiser_vox/validation_test/corr_ridge_PCA_whiten{args.whiten}/{args.networks}/'
-fname_format = args.networks+'_corr_trial_sub-{:03d}.npy'
+fname_format = args.networks+'_corr_trial_sub-{:03d}.mat'
 sub_i, sub_f = 2, 27
 fnames = [fname_format.format(sub) for sub in range(sub_i, sub_f) if sub != 17]
 
@@ -17,7 +18,8 @@ num_sub = sub_f - sub_i
 num_vox, num_time = 3294, 301
 tot_corr = np.zeros((num_sub, num_vox, num_time))
 for ifname, fname in enumerate(tqdm(fnames)):
-    corr = np.load(f'{load_dir}/{fname}')
+    data = scipy.io.loadmat(f'{load_dir}/{fname}')
+    corr = data['corr']
     tot_corr[ifname] = corr
 
 avg_corr = np.mean(tot_corr, axis=0)

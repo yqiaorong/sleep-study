@@ -37,6 +37,22 @@ def load_eeg_to_train_enc(sub, whiten = False):
 
 	return eeg, eeg_labels
 
+def load_mpnet_fmaps(dataset):
+	fmaps_fname = f'mpnet_fmaps.mat'
+	print(fmaps_fname)
+	fmaps_path = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/mpnet/{fmaps_fname}'
+	print(fmaps_path)
+	fmaps_data = scipy.io.loadmat(fmaps_path)
+	print('fmaps successfully loaded')
+
+	# Load fmaps 
+	fmaps = fmaps_data['fmaps'].astype(np.float32) # (img, 'num_token', num_feat)
+	print(fmaps.shape)
+	
+	fmap_labels = fmaps_data['imgs_all'].squeeze()
+	print(fmap_labels.shape)
+	return fmaps, fmap_labels
+
 def customize_fmaps(eeg, eeg_labels, fmaps_all, flabels_all):
 
 	# Check the order of two labels
