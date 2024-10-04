@@ -135,3 +135,18 @@ def load_AlexNet_fmaps(dataset, layer):
 	print(fmap_labels.shape)
 
 	return fmaps, fmap_labels
+
+def load_and_match_eeg_and_fmaps(sub, args, fmaps, fmap_labels):
+
+	# Load eeg
+	print(f'sub {sub}')
+	eeg, eeg_labels = load_eeg_to_train_enc(sub, whiten=args.whiten)
+
+	# Reorder localiser fmaps
+	reorder_fmaps, reorder_flabels = customize_fmaps(eeg, eeg_labels, fmaps, fmap_labels)
+
+	print(eeg.shape, eeg_labels.shape)
+	print(reorder_fmaps.shape, reorder_flabels.shape)
+
+	return eeg, eeg_labels, reorder_fmaps, reorder_flabels
+

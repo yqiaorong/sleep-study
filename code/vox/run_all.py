@@ -1,11 +1,10 @@
 import os
 
-networks = 'ResNet'
-layers = [# 'maxpool', 
-          'layer3']
+networks = 'ResNet' # [ ResNet / Alexnet / mpnet / GPTNeo ]
+layers = ['maxpool','layer3']
 # layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8','all']
 
-subs = range(6, 27)
+subs = range(2, 27)
 
 for sub in subs:
     if sub != 17:
