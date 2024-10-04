@@ -100,7 +100,7 @@ for sub in range(2, 2+num_sub):
 		pred_eeg = frr.predict(tot_fmaps_test)
 		return pred_eeg
 
-	pred_results = Parallel(n_jobs=-1)(delayed(fit_frr)(t) for t in tqdm(range(num_time)))
+	pred_results = Parallel(n_jobs=-1)(delayed(fit_frr)(t) for t in tqdm(range(num_time), desc='pred EEG'))
 	pred_eeg = np.stack(pred_results, axis=-1)
 	print(pred_eeg.shape) 
 
@@ -116,7 +116,7 @@ for sub in range(2, 2+num_sub):
 				corr[0, ivox, itime] = np.corrcoef(pred_eeg[:, ivox, itime], rand_eeg)[0, 1]
 		return corr
 
-	permu_result = Parallel(n_jobs=-1)(delayed(permu)(ip) for ip in tqdm(range(args.n_permu)))
+	permu_result = Parallel(n_jobs=-1)(delayed(permu)(ip) for ip in tqdm(range(args.n_permu), desc='permutations'))
 	corr = np.squeeze(np.stack(permu_result, axis=0))
 	del permu_result
 	print(corr.shape)
