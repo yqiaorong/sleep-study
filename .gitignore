@@ -1,6 +1,3 @@
-dataset/sleemory_localiser/dnn_feature_maps
-
-dataset/sleemory_retrieval/dnn_feature_maps
-
+dataset/
 output/
 archive/
