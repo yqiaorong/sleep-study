@@ -11,7 +11,6 @@ from sklearn.linear_model import Ridge
 from func import *
 from joblib import Parallel, delayed
 from sklearn.model_selection import train_test_split
-from matplotlib import pyplot as plt
 
 # =============================================================================
 # Input arguments
@@ -57,87 +56,97 @@ num_time = 301
 num_vox = 3294
 corr_tot = np.zeros((args.n_permu, num_vox, num_time))
 
-num_sub = 25
-for sub in range(2, 2+num_sub):
-
-	# =============================================================================
-	# Load EEG
-	# =============================================================================
-
-	tot_eeg, tot_eeg_labels, tot_reorder_fmaps, tot_reorder_flabels = load_and_match_eeg_and_fmaps(sub, args, fmaps, fmap_labels)
-
-	# =============================================================================
-	# Extract the best features (PCA)
-	# =============================================================================
-
-	if args.networks == 'Alexnet':
-		pass
-	else:
-		from sklearn.decomposition import PCA
-		pca = PCA(n_components=250)
-		tot_reorder_fmaps = pca.fit(tot_reorder_fmaps).transform(tot_reorder_fmaps)
-	print(tot_reorder_fmaps.shape)
-
-	# =============================================================================
-	# Split the dataset
-	# =============================================================================
-
-	seed = 42
-	tot_eeg_train, tot_eeg_test, tot_fmaps_train, tot_fmaps_test, tot_flabels_train, tot_flabels_test = train_test_split(tot_eeg, tot_reorder_fmaps, tot_reorder_flabels, test_size=0.25, random_state=seed)
-	print(tot_eeg_train.shape, tot_eeg_test.shape, tot_fmaps_train.shape, tot_fmaps_test.shape, tot_flabels_train.shape, tot_flabels_test.shape)
-	del tot_eeg, tot_reorder_fmaps, tot_reorder_flabels
-
-	# =============================================================================
-	# Iterate over time 
-	# =============================================================================
-
-	# n_alphas = 20
-	fracs = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ])
-
-	def fit_frr(timepoint):
-		frr = FracRidgeRegressorCV()
-		frr.fit(tot_fmaps_train, tot_eeg_train[:,:,timepoint], frac_grid = fracs)
-		pred_eeg = frr.predict(tot_fmaps_test)
-		return pred_eeg
-
-	pred_results = Parallel(n_jobs=-1)(delayed(fit_frr)(t) for t in tqdm(range(num_time), desc='pred EEG'))
-	pred_eeg = np.stack(pred_results, axis=-1)
-	print(pred_eeg.shape) 
-
-	# =============================================================================
-	# Correlations
-	# =============================================================================
-    
-	def permu(ipermu):
-		corr = np.zeros((1, num_vox, num_time))
-		for itime in range(num_time):
-			for ivox in range(num_vox):
-				rand_eeg = np.random.permutation(tot_eeg_test[:, ivox, itime])
-				corr[0, ivox, itime] = np.corrcoef(pred_eeg[:, ivox, itime], rand_eeg)[0, 1]
-		return corr
-
-	permu_result = Parallel(n_jobs=-1)(delayed(permu)(ip) for ip in tqdm(range(args.n_permu), desc='permutations'))
-	corr = np.squeeze(np.stack(permu_result, axis=0))
-	del permu_result
-	print(corr.shape)
-
-	# corr = np.zeros((args.n_permu, num_vox, num_time))
-	# # Correlation of image pattern
-	# for itime in tqdm(range(num_time), desc='permutation'):
-	# 	for ivox in range(num_vox):
-	# 		for ipermu in range(args.n_permu):
-	# 			rand_eeg = np.random.permutation(tot_eeg_test[:, ivox, itime])
-	# 			corr[ipermu, ivox, itime] = np.corrcoef(pred_eeg[:, ivox, itime], rand_eeg)[0, 1]
-	
-	# Append to the total matrix
-	corr_tot += corr
-	del corr
-
-# Get the average across subjects
-corr_tot = corr_tot / num_sub
-
-# Save corr
+# Save dir
 save_dir = f'output/sleemory_localiser_vox/permutation_test/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
-scipy.io.savemat(f'{save_dir}/{model_name}_corr_all.mat', {'corr': corr_tot})
+
+
+num_sub = 24
+for sub in range(2, 27):
+	if sub != 17:
+
+		# =============================================================================
+		# Load EEG
+		# =============================================================================
+
+		tot_eeg, tot_eeg_labels, tot_reorder_fmaps, tot_reorder_flabels = load_and_match_eeg_and_fmaps(sub, args, fmaps, fmap_labels)
+
+		# =============================================================================
+		# Extract the best features (PCA)
+		# =============================================================================
+
+		if args.networks == 'Alexnet':
+			pass
+		else:
+			from sklearn.decomposition import PCA
+			pca = PCA(n_components=250)
+			tot_reorder_fmaps = pca.fit(tot_reorder_fmaps).transform(tot_reorder_fmaps)
+		print(tot_reorder_fmaps.shape)
+
+		# =============================================================================
+		# Split the dataset
+		# =============================================================================
+
+		seed = 42
+		tot_eeg_train, tot_eeg_test, tot_fmaps_train, tot_fmaps_test, tot_flabels_train, tot_flabels_test = train_test_split(tot_eeg, tot_reorder_fmaps, tot_reorder_flabels, test_size=0.25, random_state=seed)
+		print(tot_eeg_train.shape, tot_eeg_test.shape, tot_fmaps_train.shape, tot_fmaps_test.shape, tot_flabels_train.shape, tot_flabels_test.shape)
+		del tot_eeg, tot_reorder_fmaps, tot_reorder_flabels
+
+		# =============================================================================
+		# Iterate over time 
+		# =============================================================================
+
+		# n_alphas = 20
+		fracs = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ])
+
+		def fit_frr(timepoint):
+			frr = FracRidgeRegressorCV()
+			frr.fit(tot_fmaps_train, tot_eeg_train[:,:,timepoint], frac_grid = fracs)
+			pred_eeg = frr.predict(tot_fmaps_test)
+			return pred_eeg
+
+		pred_results = Parallel(n_jobs=-1)(delayed(fit_frr)(t) for t in tqdm(range(num_time), desc='pred EEG'))
+		pred_eeg = np.stack(pred_results, axis=-1)
+		print(pred_eeg.shape) 
+
+		# =============================================================================
+		# Correlations
+		# =============================================================================
+		
+		def permu(ipermu):
+			corr = np.zeros((1, num_vox, num_time))
+			for itime in range(num_time):
+				for ivox in range(num_vox):
+					rand_eeg = np.random.permutation(tot_eeg_test[:, ivox, itime])
+					corr[0, ivox, itime] = np.corrcoef(pred_eeg[:, ivox, itime], rand_eeg)[0, 1]
+			return corr
+		
+		# def permu(ipermu):
+		# 	corr = np.zeros((1, num_vox, num_time))
+		# 	for itime in range(num_time):
+		# 		for ivox in range(num_vox):
+		# 			rand_eeg = np.random.permutation(tot_eeg_test[:, ivox, itime])
+		# 			test_val = pd.Series(rand_eeg)
+		# 			pred_val = pd.Series(pred_eeg[:, ivox, itime])
+		# 			corr[0, ivox, itime] = test_val.corr(pred_val)
+		# 	return corr
+		
+		
+
+		permu_result = Parallel(n_jobs=-1)(delayed(permu)(ip) for ip in tqdm(range(args.n_permu), desc='permutations'))
+		corr = np.squeeze(np.stack(permu_result, axis=0))
+		del permu_result
+		print(corr.shape)
+		
+		# Append to the total matrix
+		corr_tot += corr
+		del corr
+		corr_tot_split = np.split(corr_tot, 5, axis=0)
+
+		for idata, data in enumerate(corr_tot_split):
+			print(data.shape)
+			scipy.io.savemat(f'{save_dir}/{model_name}_corr_chunk-{idata}.mat', {'corr': data,
+																		         'end_sub': sub})
+			print(f'Until sub {sub}, chunk {idata} saved! ')
+print('All saved! ')
