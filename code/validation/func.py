@@ -63,28 +63,11 @@ def customize_fmaps(eeg, eeg_labels, fmaps_all, flabels_all):
 	return reorder_fmaps, np.squeeze(reorder_flabels)
 
 # Load the feature maps
-def load_ResNet_fmaps(dataset, layer_name):
-	fmaps_fname = f'ResNet-{layer_name}_fmaps.mat'
+
+def load_fmaps(dataset, network):
+	fmaps_fname = f'{network}_fmaps.mat'
 	print(fmaps_fname)
-	fmaps_path = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/ResNet-{layer_name}/{fmaps_fname}'
-	print(fmaps_path)
-	fmaps_data = scipy.io.loadmat(fmaps_path)
-	print('fmaps successfully loaded')
-
-	# Load fmaps 
-	fmaps = fmaps_data['fmaps'].astype(np.float32) # (img, 'num_token', num_feat)
-	print(fmaps.shape)
-
-	# load labels (contains .jpg)
-	fmap_labels = np.char.rstrip(fmaps_data['imgs_all'])
-	print(fmap_labels.shape)
-
-	return fmaps, fmap_labels
-
-def load_mpnet_fmaps(dataset):
-	fmaps_fname = f'mpnet_fmaps.mat'
-	print(fmaps_fname)
-	fmaps_path = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/mpnet/{fmaps_fname}'
+	fmaps_path = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/{network}/{fmaps_fname}'
 	print(fmaps_path)
 	fmaps_data = scipy.io.loadmat(fmaps_path)
 	print('fmaps successfully loaded')
@@ -94,6 +77,10 @@ def load_mpnet_fmaps(dataset):
 	print(fmaps.shape)
 	
 	fmap_labels = fmaps_data['imgs_all'].squeeze()
+	try:
+		fmap_labels = np.char.rstrip(fmap_labels)
+	except:
+		pass
 	print(fmap_labels.shape)
 	return fmaps, fmap_labels
 
@@ -121,7 +108,7 @@ def load_GPTNeo_fmaps(dataset):
 def load_AlexNet_fmaps(dataset, layer):
 	fmaps_fname = f'alexnet-{layer}_PCA_fmaps.mat'
 	print(fmaps_fname)
-	fmaps_path = f'output/sleemory_{dataset}_vox/dnn_feature_maps/{fmaps_fname}'
+	fmaps_path = f'dataset/sleemory_{dataset}/dnn_feature_maps/PCA_feature_maps/{fmaps_fname}'
 	print(fmaps_path)
 	fmaps_data = scipy.io.loadmat(fmaps_path)
 	print('fmaps successfully loaded')
@@ -132,6 +119,7 @@ def load_AlexNet_fmaps(dataset, layer):
 
 	# load labels (contains .jpg)
 	fmap_labels = np.char.rstrip(fmaps_data['imgs_all'])
+	fmap_labels = np.array([item +'.jpg' for item in fmap_labels])
 	print(fmap_labels.shape)
 
 	return fmaps, fmap_labels

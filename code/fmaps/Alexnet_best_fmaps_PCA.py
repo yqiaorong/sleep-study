@@ -90,5 +90,8 @@ local_fmaps = tot_fmaps[4:]
 print(retri_fmaps.shape, local_fmaps.shape)
 
 # Save fmaps 
-scipy.io.savemat(f'output/sleemory_localiser_vox/dnn_feature_maps/alexnet-{args.layer}_PCA_fmaps.mat', {'fmaps': local_fmaps, 'imgs_all': local_flabels})
-scipy.io.savemat(f'output/sleemory_retrieval_vox/dnn_feature_maps/alexnet-{args.layer}_PCA_fmaps.mat', {'fmaps': retri_fmaps, 'imgs_all': retri_flabels})
+save_dir = 'dataset/sleemory_localiser/dnn_feature_maps/PCA_feature_maps/'
+if os.path.isdir(save_dir) == False:
+	os.makedirs(save_dir)
+scipy.io.savemat(f'{save_dir}/alexnet-{args.layer}_PCA_fmaps.mat', {'fmaps': local_fmaps, 'imgs_all': local_flabels})
+scipy.io.savemat(f'{save_dir}/alexnet-{args.layer}_PCA_fmaps.mat', {'fmaps': retri_fmaps, 'imgs_all': retri_flabels})

@@ -2,9 +2,7 @@
 by using model gpt-neo."""
 
 import os
-import torch
 import argparse
-from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import scipy

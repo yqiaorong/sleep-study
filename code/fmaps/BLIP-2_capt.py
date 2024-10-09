@@ -65,17 +65,18 @@ for img_name in tqdm(os.listdir(img_dir)):
     lang_feats.append(lang_feat.squeeze().detach().numpy())
 lang_feats = np.asarray(lang_feats)
 print(lang_feats.shape)
+
 # =============================================================================
 # Save
 # =============================================================================
 
-save_dir = f'dataset/sleemory_{args.dataset}'
+save_dir = f'dataset/sleemory_{args.dataset}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 
 # Save the captions
 df = pd.DataFrame({'img_names': os.listdir(img_dir), 'gen_texts': gen_texts})
-df.to_csv(f'{save_dir}/{DNNetworks}_autocapt.csv')
+df.to_csv(f'{save_dir}/{DNNetworks}_autocaptions.csv')
 
 # Save the lang feats
 # np.savez(f'{save_dir}/dnn_feature_maps/{DNNetworks}_text_fmaps_autocapt.npz', *lang_feats)

@@ -42,13 +42,10 @@ print('')
 # Load localiser fmaps
 if args.networks == 'GPTNeo':
     fmaps, fmap_labels = load_GPTNeo_fmaps('localiser')
-elif args.networks == 'mpnet':
-   fmaps, fmap_labels = load_mpnet_fmaps('localiser')
 elif args.networks == 'Alexnet':
-	fmaps, fmap_labels = load_AlexNet_fmaps('localiser', layer=args.layer)
-	fmap_labels = np.array([item +'.jpg' for item in fmap_labels])
-elif args.networks == 'ResNet':
-    fmaps, fmap_labels = load_ResNet_fmaps('localiser', args.layer_name)
+	fmaps, fmap_labels = load_AlexNet_fmaps('localiser', layer=args.layer_name)
+else: 
+   fmaps, fmap_labels = load_fmaps('localiser', model_name)
 
 
 
@@ -132,8 +129,6 @@ for sub in range(2, 27):
 		# 			corr[0, ivox, itime] = test_val.corr(pred_val)
 		# 	return corr
 		
-		
-
 		permu_result = Parallel(n_jobs=-1)(delayed(permu)(ip) for ip in tqdm(range(args.n_permu), desc='permutations'))
 		corr = np.squeeze(np.stack(permu_result, axis=0))
 		del permu_result

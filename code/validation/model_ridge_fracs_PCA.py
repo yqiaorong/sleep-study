@@ -43,13 +43,10 @@ print('')
 # Load localiser fmaps
 if args.networks == 'GPTNeo':
     fmaps, fmap_labels = load_GPTNeo_fmaps('localiser')
-elif args.networks == 'mpnet':
-   fmaps, fmap_labels = load_mpnet_fmaps('localiser')
 elif args.networks == 'Alexnet':
-	fmaps, fmap_labels = load_AlexNet_fmaps('localiser', layer=args.layer)
-	fmap_labels = np.array([item +'.jpg' for item in fmap_labels])
-elif args.networks == 'ResNet':
-    fmaps, fmap_labels = load_ResNet_fmaps('localiser', args.layer_name)
+	fmaps, fmap_labels = load_AlexNet_fmaps('localiser', layer=args.layer_name)
+else: 
+   fmaps, fmap_labels = load_fmaps('localiser', model_name)
 
 # =============================================================================
 # Load EEG
