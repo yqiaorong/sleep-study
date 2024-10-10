@@ -59,10 +59,31 @@ if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 
 
-num_sub = 24
-for sub in range(2, 27):
-	if sub != 17:
 
+# Check the last saved sub
+if os.path.exists(f'{save_dir}/{model_name}_corr_chunk-0.mat'):
+	for i in range(5):
+		data = scipy.io.loadmat(f'{save_dir}/{model_name}_corr_chunk-{i}.mat')
+		if i == 0:
+			end_sub = data['end_sub']
+			if end_sub == 26:
+				print('All finished!')
+				# os._exit(0)
+			start_sub = end_sub+1
+		corr_tot[i*200:(i+1)*200] = data['corr']
+		del data
+	print(f'Continue from the last saved sub: {end_sub[0][0]}...')
+	os._exit(0)
+else:
+	start_sub = 2
+	print(f'New start from sub: {start_sub}...')
+
+
+
+num_sub = 24
+for sub in range(start_sub, 27):
+	if sub != 17:
+		print(f'Current sub: {sub}')
 		# =============================================================================
 		# Load EEG
 		# =============================================================================
