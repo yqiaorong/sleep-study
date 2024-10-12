@@ -40,6 +40,16 @@ img_prepr = trn.Compose([
 model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x8d_wsl')
 model.eval()
 
+# for name, layer in model.named_modules():
+#     if hasattr(layer, 'weight') and layer.weight is not None:
+#         print(f"Layer name: {name}")
+#         print(f"Layer weight shape: {layer.weight.size()}")
+#     # print('')
+#     # if isinstance(layer, torch.nn.Conv2d):
+#     #     print(f"Layer name: {name}")
+#     #     print(f"Cardinality (Groups): {layer.groups}")
+#     print('-' * 50)
+    
 # Use GPU otherwise CPU
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)

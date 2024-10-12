@@ -33,14 +33,6 @@ for key, val in vars(args).items():
 # Load captions
 # =============================================================================
 
-# if args.text_type == 'imgname':
-#     capts = os.listdir(f'dataset/sleemory_{args.dataset}/image_set/')
-#     capts = [capt[:-4] for capt in capts]
-    
-# elif args.text_type == 'captions':
-#     capt_df = pd.read_csv(f'dataset/sleemory_{args.dataset}/{DNNetworks}_captions.csv')
-#     capts = capt_df['gen_texts']
-
 capt_df = pd.read_csv(f'dataset/sleemory_{args.dataset}/BLIP-2_captions.csv')
 imgs_all, capts = capt_df['img_names'], capt_df['gen_texts']
 
@@ -60,6 +52,16 @@ elif args.networks == 'CLIP':
     model_text = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     tokenizer = AutoTokenizer.from_pretrained("openai/clip-vit-base-patch32")
     print('CLIP model ready!')
+    
+# for name, layer in model_text.named_modules():
+#     if hasattr(layer, 'weight') and layer.weight is not None:
+#         print(f"Layer name: {name}")
+#         print(f"Layer weight shape: {layer.weight.size()}")
+#     # print('')
+#     # if isinstance(layer, torch.nn.Conv2d):
+#     #     print(f"Layer name: {name}")
+#     #     print(f"Cardinality (Groups): {layer.groups}")
+#     print('-' * 50)
 
 class AttentionPooling(nn.Module):
     def __init__(self, hidden_dim):
@@ -78,8 +80,8 @@ class AttentionPooling(nn.Module):
 atten_pool = AttentionPooling(hidden_dim=2560)
 
 # Use GPU
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-device = 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = 'cpu'
 model_text.to(device)
 
 # =============================================================================
