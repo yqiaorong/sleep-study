@@ -1,16 +1,6 @@
-"""Extract and save the AlexNet feature maps of sleemory images.
-
-Parameters
-----------
-pretrained : bool
-	If True use a pretrained network, if False a randomly initialized one.
-layer_name : str
-"""
-
 import argparse
 from torchvision import models
 import torch.nn as nn
-import numpy as np
 import torch
 from torch.autograd import Variable as V
 from torchvision import transforms as trn
@@ -24,11 +14,13 @@ import scipy
 # =============================================================================
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
-parser.add_argument('--dataset', default=None, type=str)
+parser.add_argument('--dataset',    default=None, type=str)
 args = parser.parse_args()
 
+DNNetworks = 'alexnet'
+
 print('')
-print('Extract sleemory images feature maps AlexNet <<<')
+print(f'>>> Extract sleemory images feature maps ({DNNetworks}) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -42,6 +34,7 @@ torch.use_deterministic_algorithms(True)
 # =============================================================================
 # Select the layers of interest and import the model
 # =============================================================================
+
 # Lists of AlexNet convolutional and fully connected layers
 conv_layers = ['conv1', 'ReLU1', 'maxpool1', 'conv2', 'ReLU2', 'maxpool2',
 	'conv3', 'ReLU3', 'conv4', 'ReLU4', 'conv5', 'ReLU5', 'maxpool5']
@@ -93,7 +86,7 @@ centre_crop = trn.Compose([
 # =============================================================================
 
 # The main image directory
-img_set_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
+img_set_dir = f'dataset/sleemory_{args.dataset}/image_set/'
 image_list = []
 for root, _, files in os.walk(img_set_dir):
 	for file in files:
@@ -103,7 +96,7 @@ image_list.sort()
 print(len(image_list))
 
 # Create the saving directory if not existing
-save_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/alexnet/pretrained-{str(args.pretrained)}/'
+save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/{DNNetworks}/pretrained-{str(args.pretrained)}/'
 if os.path.isdir(save_dir) == False:
 	os.makedirs(save_dir)
 

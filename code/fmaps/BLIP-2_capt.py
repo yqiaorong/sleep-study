@@ -1,11 +1,10 @@
+"""This script generate captions from images using BLIP-2 model."""
 from PIL import Image
 import os
 import torch
 import argparse
 from tqdm import tqdm
 import pandas as pd
-import numpy as np
-import scipy
 
 # =============================================================================
 # Input arguments
@@ -18,7 +17,7 @@ args = parser.parse_args()
 DNNetworks = 'BLIP-2'
 
 print('')
-print(f'>>> Sleemory images feature maps and captions {DNNetworks} <<<')
+print(f'>>> Generate Sleemory images captions ({DNNetworks}) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -33,7 +32,6 @@ from transformers import Blip2Processor, Blip2ForConditionalGeneration , AutoTok
 
 model_cap = Blip2ForConditionalGeneration.from_pretrained(
             "Salesforce/blip2-opt-2.7b", 
-            # load_in_8bit=True, device_map={"": 0}, # Require GPU
             torch_dtype=torch.float32) 
 processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
 tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
@@ -57,15 +55,6 @@ for img_name in tqdm(os.listdir(img_dir)):
     print(gen_text)
     gen_texts.append(gen_text)
 
-    # Get lang model output
-    input_ids = tokenizer(img_name[:-4], padding=True, return_tensors="pt")
-    output = model_cap(img_input['pixel_values'], input_ids['input_ids'])
-    lang_model_out = output.language_model_outputs
-    lang_feat = lang_model_out.logits
-    lang_feats.append(lang_feat.squeeze().detach().numpy())
-lang_feats = np.asarray(lang_feats)
-print(lang_feats.shape)
-
 # =============================================================================
 # Save
 # =============================================================================
@@ -77,7 +66,3 @@ if os.path.isdir(save_dir) == False:
 # Save the captions
 df = pd.DataFrame({'img_names': os.listdir(img_dir), 'gen_texts': gen_texts})
 df.to_csv(f'{save_dir}/{DNNetworks}_autocaptions.csv')
-
-# Save the lang feats
-# np.savez(f'{save_dir}/dnn_feature_maps/{DNNetworks}_text_fmaps_autocapt.npz', *lang_feats)
-# scipy.io.savemat(f'{save_dir}/dnn_feature_maps/{DNNetworks}_text_fmaps_autocapt.mat', {'lang_model_feats': lang_feats}) 

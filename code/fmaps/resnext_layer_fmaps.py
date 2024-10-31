@@ -10,11 +10,11 @@ import scipy
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset',    default=None,      type=str)
-parser.add_argument('--layer_name', default='layer3', type=str) # layer4.2.conv3 / fc
+parser.add_argument('--dataset',    default=None,     type=str)
+parser.add_argument('--layer_name', default='layer3', type=str) # layer3 / fc
 args = parser.parse_args()
 
-DNNetworks = f'ResNet-{args.layer_name}'
+DNNetworks = f'ResNeXt-{args.layer_name}'
 
 print('')
 print(f'>>> Extract sleemory images feature maps ({DNNetworks}) <<<')
@@ -39,16 +39,6 @@ img_prepr = trn.Compose([
 
 model = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x8d_wsl')
 model.eval()
-
-# for name, layer in model.named_modules():
-#     if hasattr(layer, 'weight') and layer.weight is not None:
-#         print(f"Layer name: {name}")
-#         print(f"Layer weight shape: {layer.weight.size()}")
-#     # print('')
-#     # if isinstance(layer, torch.nn.Conv2d):
-#     #     print(f"Layer name: {name}")
-#     #     print(f"Cardinality (Groups): {layer.groups}")
-#     print('-' * 50)
     
 # Use GPU otherwise CPU
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -66,19 +56,16 @@ if args.layer_name == 'fc':
     model.fc.register_forward_hook(hook_fn)
 elif args.layer_name == 'maxpool':
     model.maxpool.register_forward_hook(hook_fn)
-# elif args.layer_name == 'layer4.2.conv3':
-#     model.layer4[-1].conv3.register_forward_hook(hook_fn)
 elif args.layer_name == 'layer3':
     model.layer3.register_forward_hook(hook_fn)
      
-
 # Extract
 fmaps = None
 flabels = []
 
-img_dir = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset//sleemory_{args.dataset}/image_set/'
+img_dir = f'/dataset/sleemory_{args.dataset}/image_set/'
 
-
+# Iterate over all images
 for img_name in os.listdir(img_dir):
     if img_name.endswith(".jpg") or img_name.endswith(".JPEG"):
         print(img_name)
@@ -98,9 +85,9 @@ for img_name in os.listdir(img_dir):
             fmaps = torch.vstack((fmaps, layer_output)) # (num_img, num_feat 1000)
 fmaps = fmaps.cpu()
 
-
 fmaps = fmaps.reshape(fmaps.shape[0], -1)
 print(fmaps.shape)
+
 # Save feature maps
 save_dir = f'dataset/sleemory_{args.dataset}/dnn_feature_maps/full_feature_maps/{DNNetworks}/'
 if os.path.isdir(save_dir) == False:

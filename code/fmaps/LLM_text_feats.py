@@ -1,11 +1,3 @@
-"""This script extracts the text features using BLIP-2 / CLIP model. 
-
-In summary, there are three types of text features:
-    from automatically generated texts, (use BLIP-2_capt.py)
-    from manually modified generated texts,
-    from image names,
-"""
-
 import os
 import torch
 import torch.nn as nn
@@ -19,12 +11,12 @@ import scipy
 # =============================================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--networks', default=None, type=str) # [BLIP-2 / CLIP]
 parser.add_argument('--dataset',  default=None, type=str)
+parser.add_argument('--networks', default=None, type=str) # [BLIP-2 / CLIP]
 args = parser.parse_args()
 
 print('')
-print(f'>>> Extract sleemory images feature maps {args.networks} <<<')
+print(f'>>> Extract Sleemory image captions full feature maps ({args.networks}) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))
@@ -52,17 +44,8 @@ elif args.networks == 'CLIP':
     model_text = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     tokenizer = AutoTokenizer.from_pretrained("openai/clip-vit-base-patch32")
     print('CLIP model ready!')
-    
-# for name, layer in model_text.named_modules():
-#     if hasattr(layer, 'weight') and layer.weight is not None:
-#         print(f"Layer name: {name}")
-#         print(f"Layer weight shape: {layer.weight.size()}")
-#     # print('')
-#     # if isinstance(layer, torch.nn.Conv2d):
-#     #     print(f"Layer name: {name}")
-#     #     print(f"Cardinality (Groups): {layer.groups}")
-#     print('-' * 50)
 
+# Use attention pooling to get a single feature vector from the hidden states.
 class AttentionPooling(nn.Module):
     def __init__(self, hidden_dim):
         super(AttentionPooling, self).__init__()
@@ -81,7 +64,6 @@ atten_pool = AttentionPooling(hidden_dim=2560)
 
 # Use GPU
 device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = 'cpu'
 model_text.to(device)
 
 # =============================================================================
@@ -92,10 +74,10 @@ flabels, text_feats = [], []
 for icapt, capt in enumerate(capts):
     print(imgs_all[icapt], capt)
     flabels.append(imgs_all[icapt])
-    ## Input
+    # Input
     text_inputs = tokenizer([capt], padding=True, return_tensors="pt")
     
-    ## Output
+    # Output
     with torch.no_grad():
         # text outputs is dict
         text_outputs = model_text.get_text_features(**text_inputs, return_dict=True, output_hidden_states=True)

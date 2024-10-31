@@ -1,10 +1,6 @@
-"""This script extracts text features from filtered captions generaated by BLIP-2
-by using model gpt-neo."""
-
 import os
 import torch
 import argparse
-from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import scipy
@@ -20,7 +16,7 @@ args = parser.parse_args()
 DNNetworks = 'gptneo'
 
 print('')
-print(f'>>> Sleemory images full feature maps {DNNetworks} <<<')
+print(f'>>> Extract Sleemory image captions full feature maps ({DNNetworks}) <<<')
 print('\nInput arguments:')
 for key, val in vars(args).items():
 	print('{:16} {}'.format(key, val))

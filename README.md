@@ -34,74 +34,64 @@ The download path: ../code/
 
 The order of running the scripts: 
 
-### whiten_data/
-
-* whiten_localiser.py --adapt_to [ /_sleemory] --whiten (This script whitens the sleemory localiser eeg and re-orders it according to the image order by stacking eegs with the same stimuli, whitening them (optional) and then taking the average as the final whitened eeg representing the corresponding image.)
-
-* whiten_retrieval_re.py
-
 ### fmaps/
 
-Alexnet
+Generate image captions using [BLIP-2](https://huggingface.co/Salesforce/blip2-opt-2.7b):
 
-* Alexnet_full_fmaps.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained 
+* BLIP-2_capt.py --dataset [ localiser / retrieval ] (This script generates captions for images.)
+
+Then we manually adjusted the automatically generated captions. 
+
+Extracts the caption text features from [BLIP-2](https://huggingface.co/Salesforce/blip2-opt-2.7b) / [CLIP](https://huggingface.co/openai/clip-vit-base-patch32):
+
+* LLM_text_feats.py --dataset [ localiser / retrieval ] --networks [BLIP-2 / CLIP] 
+
+Extract the caption text features from [GPT-Neo](https://huggingface.co/EleutherAI/gpt-neo-1.3B):
+
+* gptneo_full_fmaps.py --dataset [ localiser / retrieval ]
+
+Extract the caption text features from MPNet:
+
+* mpnet_full_fmaps.py --dataset [ localiser / retrieval ]
+
+Extracts the visual image features from ResNeXt [resnext101_32x8d_wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/):
+
+* resnext_layer_fmaps.py --dataset [ localiser / retrieval ] --layer_name [ maxpool / layer3 / fc] 
+
+Extracts the visual image features from AlexNet and use PCA to select the best features:
+
+* Alexnet_full_fmaps.py --pretrained --dataset [ localiser / retrieval ]
+
+* Alexnet_best_fmaps_PCA.py --pretrained --layer [ conv'x' | x = 1, ...5 / fc'y' | y = 6, 7, 8 / all]
+
+### validation/
+
+Validation test of features from BLIP-2 / CLIP / AlexNet / ResNeXt:  
+
+* valid_all.py 
+
+  * model_ridge_fracs_PCA.py
+
+  * avg_corr_each_model.py
+
+Permutation test of features from BLIP-2 / CLIP / ResNeXt:  
+
+* permu_all.py 
+
+  * permutation_test.py
+
+Predict EEG from neural networks features using encoding models:
+
+* pred_all.py
   
-* Alexnet_best_fmaps_each_layer.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+  * pred_retrieval_eeg.py
 
-* Alexnet_best_fmaps_all_layer.py --dataset [ sleemory_localiser / sleemory_retrieval ] --pretrained --num_feat --whiten
+## Data structure
 
-CLIP
+Neural Networks features
 
-* CLIP_fmaps.py --dataset [ localiser / retrieval ]
+dataset
+   |
+   └───sleemory_localiser───dnn_feature_maps───full_feature_maps───mpnet
 
-ResNet
-
-* resnext_fc_layer_fmaps.py --dataset [ localiser / retrieval ]
-
-* resnext_full_fmaps.py --dataset [ localiser / retrieval ]
-   
-  resnext_full_fmaps_single_img.py --dataset [ localiser / retrieval ] --img_idx
-
-* resnext_best_fmaps_chunkall.py --num_feat --whiten
-  
-  resnext_best_fmaps_chunk.py --layer_start_idx --num_feat --whiten
-
-* resnext_best_fmaps_final.py --old_num_feat --new_num_feat --whiten
-
-BLIP-2
-
-* BLIP-2_capt.py --dataset [ localiser / retrieval ] (This script generates captions for images and extracts text features from automatically generated texts.)
-
-* BLIP-2_text_feats.py --dataset [ localiser / retrieval ] --text_type (This script extracts the text features from either image names or the filtered generated texts.)
-
-GPT-Neo
-
-* gptneo_last_layer_fmaps.py --dataset [ localiser / retrieval ] 
-
-* gptneo_full_fmaps.py --dataset [ localiser / retrieval ] 
-
-* gptneo_best_fmaps_all_layer.py --dataset [ localiser / retrieval ] --num_feat --whiten
-
-### sleemory_localiser/
-
-* build_enc_model.py --networks --num_feat (countain additional prompt of 'whiten')
-
-* pred_eeg.py --networks --num_feat --whiten
-
-### sleemory_retrieval/
-
-
-
-### THINGS_preprocess/
-
-* preprocess_all.py --sfreq --adapt_to (This file preprocesses all THINGS EEG2 and EEG1 raw data. If it's adapted to sleemory, sfreq = 250, adapt_to = _sleemory )
-
-### THINGS/
-
-* 1_alexnet.py (This file extracts THINGS images features by Alexnet. )
-
-* 2_img_feat_selection.py --num_feat --adapt_to [ /_sleemory] (This file selects the best N features of THINGS images features based on THINGS EEG2 training data.)
-
-* 3_enc_model.py --num_feat --adapt_to [ /_sleemory] (This file trains the linear regression model on THINGS EEG2 training data. )
-
-* 4_corr.py --test_dataset --num_feat (THINGS_EEG2/THINGS_EEG1) (This file tests the encoding model on either THINGS EEG2 test data or THINGS EEG1 data.)
+   └───sleemory_retrieval───dnn_feature_maps───full_feature_maps

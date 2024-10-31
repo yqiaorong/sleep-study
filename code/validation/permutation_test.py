@@ -140,16 +140,6 @@ for sub in range(start_sub, 27):
 					corr[0, ivox, itime] = np.corrcoef(pred_eeg[:, ivox, itime], rand_eeg)[0, 1]
 			return corr
 		
-		# def permu(ipermu):
-		# 	corr = np.zeros((1, num_vox, num_time))
-		# 	for itime in range(num_time):
-		# 		for ivox in range(num_vox):
-		# 			rand_eeg = np.random.permutation(tot_eeg_test[:, ivox, itime])
-		# 			test_val = pd.Series(rand_eeg)
-		# 			pred_val = pd.Series(pred_eeg[:, ivox, itime])
-		# 			corr[0, ivox, itime] = test_val.corr(pred_val)
-		# 	return corr
-		
 		permu_result = Parallel(n_jobs=-1)(delayed(permu)(ip) for ip in tqdm(range(args.n_permu), desc='permutations'))
 		corr = np.squeeze(np.stack(permu_result, axis=0))
 		del permu_result

@@ -137,4 +137,3 @@ def load_and_match_eeg_and_fmaps(sub, args, fmaps, fmap_labels):
 	print(reorder_fmaps.shape, reorder_flabels.shape)
 
 	return eeg, eeg_labels, reorder_fmaps, reorder_flabels
-
