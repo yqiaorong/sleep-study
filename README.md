@@ -1,20 +1,18 @@
 # Sleep Study
 
-## dataset
+## dataset/
 
-3. sleemory_localiser: 
+1. sleemory_localiser: 
   
   image_set: ../dataset/sleemory_localiser/image_set
 
-4. sleemory_retrieval: 
+2. sleemory_retrieval: 
   
   image_set: ../dataset/sleemory_localiser/image_set
 
-## code
+## code/
 
 The download path: ../code/
-
-The order of running the scripts: 
 
 ### fmaps/
 
