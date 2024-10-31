@@ -65,13 +65,3 @@ Predict EEG from neural networks features using encoding models:
 * pred_all.py
   
   * pred_retrieval_eeg.py
-
-## Data structure
-
-Neural Networks features
-
-dataset
-   |
-   └───sleemory_localiser───dnn_feature_maps───full_feature_maps───mpnet
-
-   └───sleemory_retrieval───dnn_feature_maps───full_feature_maps
