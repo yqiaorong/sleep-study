@@ -12,12 +12,13 @@ import scipy
 # =============================================================================
 # Input arguments
 # =============================================================================
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrained', default=True, type=bool)
 parser.add_argument('--dataset',    default=None, type=str)
 args = parser.parse_args()
 
-DNNetworks = 'alexnet'
+DNNetworks = 'AlexNet'
 
 print('')
 print(f'>>> Extract sleemory images feature maps ({DNNetworks}) <<<')

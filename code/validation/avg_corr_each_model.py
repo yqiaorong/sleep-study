@@ -4,10 +4,25 @@ from tqdm import tqdm
 from matplotlib import pyplot as plt
 import scipy.io
 
+# =============================================================================
+# Input arguments
+# =============================================================================
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--networks', default=None,  type=str)
 parser.add_argument('--whiten',   default=False, type=bool)
 args = parser.parse_args()
+
+print('')
+print(f'>>> Correlations of model ({args.networks}) across subjects <<<')
+print('\nInput arguments:')
+for key, val in vars(args).items():
+	print('{:16} {}'.format(key, val))
+print('')
+
+# =============================================================================
+# Load validation data
+# =============================================================================
 
 load_dir = f'output/sleemory_localiser_vox/validation_test/corr_ridge_PCA_whiten{args.whiten}/{args.networks}/'
 fname_format = args.networks+'_corr_trial_sub-{:03d}.mat'
@@ -24,7 +39,10 @@ for ifname, fname in enumerate(tqdm(fnames)):
 
 avg_corr = np.mean(tot_corr, axis=0)
 
-# Plot
+# =============================================================================
+# Plot correlations
+# =============================================================================
+
 plt.figure()
 plt.imshow(avg_corr, aspect='auto', cmap='viridis', origin='lower')
 plt.colorbar(label='Corr Coeffs')

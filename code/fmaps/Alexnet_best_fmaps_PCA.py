@@ -13,7 +13,7 @@ parser.add_argument('--pretrained',default=True, type=bool)
 parser.add_argument('--layer',     default='all',type=str)
 args = parser.parse_args()
 
-DNNetworks = 'alexnet'
+DNNetworks = 'AlexNet'
 
 print('')
 print(f'>>> Select the best features from AlexNet ({args.layer}) <<<')

@@ -8,7 +8,7 @@ def load_eeg_to_train_enc(sub, whiten = False):
 
 	eeg_fname = f'sub-{sub:03d}_task-localiser_source_data'
 	if whiten==False:
-		eeg_dir = '/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/dataset/sleemory_localiser/preprocessed_data/'
+		eeg_dir = '/dataset/sleemory_localiser/preprocessed_data/'
 		
 		eeg_data = mat73.loadmat(os.path.join(eeg_dir, eeg_fname+'.mat'))
 		eeg = eeg_data['sub_eeg_loc']['eeg'].astype(np.float32)
@@ -67,7 +67,7 @@ def customize_fmaps(eeg, eeg_labels, fmaps_all, flabels_all):
 def load_fmaps(dataset, network):
 	fmaps_fname = f'{network}_fmaps.mat'
 	print(fmaps_fname)
-	fmaps_path = f'/home/simon/Documents/gitrepos/shannon_encodingmodelsEEG/sleep-study/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/{network}/{fmaps_fname}'
+	fmaps_path = f'/dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/{network}/{fmaps_fname}'
 	print(fmaps_path)
 	fmaps_data = scipy.io.loadmat(fmaps_path)
 	print('fmaps successfully loaded')
@@ -84,7 +84,6 @@ def load_fmaps(dataset, network):
 	print(fmap_labels.shape)
 	return fmaps, fmap_labels
 
-# Load the feature maps
 def load_GPTNeo_fmaps(dataset):
 	fmaps_data = scipy.io.loadmat(f'dataset/sleemory_{dataset}/dnn_feature_maps/full_feature_maps/gptneo/gptneo_fmaps.mat')
 
@@ -106,7 +105,7 @@ def load_GPTNeo_fmaps(dataset):
 	return fmaps, fmaps_labels
 
 def load_AlexNet_fmaps(dataset, layer):
-	fmaps_fname = f'alexnet-{layer}_PCA_fmaps.mat'
+	fmaps_fname = f'AlexNet-{layer}_PCA_fmaps.mat'
 	print(fmaps_fname)
 	fmaps_path = f'dataset/sleemory_{dataset}/dnn_feature_maps/PCA_feature_maps/{fmaps_fname}'
 	print(fmaps_path)

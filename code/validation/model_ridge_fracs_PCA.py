@@ -3,11 +3,8 @@ import scipy.io
 import numpy as np
 from scipy import stats as stats
 from fracridge import FracRidgeRegressorCV
-# from sklearn.linear_model import LinearRegression
 import argparse
-import mat73
 from tqdm import tqdm
-from sklearn.linear_model import Ridge
 from func import *
 from joblib import Parallel, delayed
 from sklearn.model_selection import train_test_split
@@ -41,9 +38,9 @@ print('')
 # =============================================================================
 
 # Load localiser fmaps
-if args.networks == 'GPTNeo':
+if args.networks == 'gptneo':
     fmaps, fmap_labels = load_GPTNeo_fmaps('localiser')
-elif args.networks == 'Alexnet':
+elif args.networks == 'AlexNet':
 	fmaps, fmap_labels = load_AlexNet_fmaps('localiser', layer=args.layer_name)
 else: 
    fmaps, fmap_labels = load_fmaps('localiser', model_name)
@@ -89,7 +86,7 @@ print(tot_reorder_fmaps.shape, tot_reorder_flabels.shape)
 # Extract the best features (PCA)
 # =============================================================================
 
-if args.networks == 'Alexnet':
+if args.networks == 'AlexNet':
 	pass
 else:
 	from sklearn.decomposition import PCA
@@ -107,7 +104,7 @@ print(tot_eeg_train.shape, tot_eeg_test.shape, tot_fmaps_train.shape, tot_fmaps_
 del tot_eeg, tot_reorder_fmaps, tot_reorder_flabels
 
 # =============================================================================
-# Iterate over time 
+# Validation test
 # =============================================================================
 
 # n_alphas = 20

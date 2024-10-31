@@ -3,11 +3,8 @@ import scipy.io
 from scipy import stats as stats
 import numpy as np
 from fracridge import FracRidgeRegressorCV
-# from sklearn.linear_model import LinearRegression
 import argparse
-import mat73
 from tqdm import tqdm
-from sklearn.linear_model import Ridge
 from func import *
 from joblib import Parallel, delayed, cpu_count
 
@@ -39,10 +36,10 @@ print('')
 # =============================================================================
 
 # Load localiser fmaps
-if args.networks == 'GPTNeo':
+if args.networks == 'gptneo':
 	fmaps, fmap_labels = load_GPTNeo_fmaps('localiser')
 	retri_fmaps, retri_flabels = load_GPTNeo_fmaps('retrieval')
-elif args.networks == 'Alexnet':
+elif args.networks == 'AlexNet':
 	fmaps, fmap_labels = load_AlexNet_fmaps('localiser', layer=args.layer_name)
 	retri_fmaps, retri_flabels = load_AlexNet_fmaps('retrieval', layer=args.layer)
 else: 
@@ -94,7 +91,7 @@ tot_fmaps = np.concatenate([retri_fmaps, tot_reorder_fmaps], axis=0)
 # tot_flabels = np.concatenate(retri_flabels, tot_reorder_flabels)
 print(tot_fmaps.shape)
 
-if args.networks == 'Alexnet':
+if args.networks == 'AlexNet':
 	pass 
 else:
 	from sklearn.decomposition import PCA
