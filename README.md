@@ -1,5 +1,4 @@
-# Sleep Study
-
+# Sleemory
 ## dataset/
 
 1. sleemory_localiser: 
